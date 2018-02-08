@@ -1281,8 +1281,8 @@ float CS_CELLULAR_AUTOMATA::combinationFunction(int id){
 	bias = agent_psychology.bias;
 	bias = getTimeInfluence(tendency);
 	//bias = 0.0f;
-	//return tendency * (bias * (1 - (1 - influenceStrength) * (1 - anxiety)) + (1 - bias) * influenceStrength * anxiety) + (1 - tendency) * influenceStrength;
-	return (1 - tendency) * (bias * (1 - (1 - influenceStrength) * (1 - anxiety)) + (1 - bias) * influenceStrength * anxiety) + tendency * influenceStrength;
+	return tendency * (bias * (1 - (1 - influenceStrength) * (1 - anxiety)) + (1 - bias) * influenceStrength * anxiety) + (1 - tendency) * influenceStrength;
+	//return (1 - tendency) * (bias * (1 - (1 - influenceStrength) * (1 - anxiety)) + (1 - bias) * influenceStrength * anxiety) + tendency * influenceStrength;
 }
 
 float CS_CELLULAR_AUTOMATA::testCombinationFunction(int id, float _tendency, float _bias){
