@@ -1,0 +1,30 @@
+size 100
+agent_number 1000
+decay 0.4
+diffusion 0.4
+ks 3
+kd 0.5
+ki 0
+kw 0.5
+meu 0.2
+kss 0.4
+kdd 1
+waiting 0.01
+density 0.04
+d_max 5
+EXIT 45 0 10 Right
+EXIT 0 52 5 Down
+EXIT 99 48 5 Up
+.EXIT 48 99 5 Right
+.MANUAL
+AUTOMATIC
+LeaderProportion 0.01
+SFF_TYPE 1
+NEW_SEED 1
+SHOW_AGENT_INFO 0
+PARALLEL_UPDATE 1
+FRICTION 0
+EXPERIMENT 1
+MOVE_OBSTACLE_TIME 500
+MOVE_OBSTACLE_DISTANCE 15
+RUN_TIMES 100

@@ -1,0 +1,38 @@
+size 100
+agent_number 1000
+decay 0.4
+diffusion 0.4
+ks 3
+kd 0.5
+ki 1
+kw 0.5
+meu 0.2
+kss 0.4
+kdd 1
+waiting 0.01
+density 0.04
+d_max 5
+EXIT 48 0 5 Right
+EXIT 0 52 5 Down
+EXIT 99 48 5 Up
+EXIT 48 99 5 Right
+exit 48 0
+exit 49 0
+exit 50 0
+exit 51 0
+exit 52 0
+exit 0 52
+exit 0 51
+exit 0 50
+exit 0 49
+exit 0 48
+exit 99 48
+exit 99 49
+exit 99 50
+exit 99 51
+exit 99 52
+exit 48 99
+exit 49 99
+exit 50 99
+exit 51 99
+exit 52 99

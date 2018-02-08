@@ -1,0 +1,149 @@
+LEFT
+MOVE DISTANCE 5
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 74.9725
+STD 1.61312
+AVERAGE LAST AGENT ESCAPE TIME 188.52
+STD 10.0464
+===========================================================
+MOVE DISTANCE 10
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 66.6679
+STD 1.29014
+AVERAGE LAST AGENT ESCAPE TIME 168.94
+STD 9.62686
+===========================================================
+MOVE DISTANCE 15
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 66.0603
+STD 1.26483
+AVERAGE LAST AGENT ESCAPE TIME 171.02
+STD 10.2117
+===========================================================
+RIGHT
+MOVE DISTANCE 5
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 74.5191
+STD 1.58982
+AVERAGE LAST AGENT ESCAPE TIME 182.94
+STD 10.3787
+===========================================================
+MOVE DISTANCE 10
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 68.4334
+STD 1.53001
+AVERAGE LAST AGENT ESCAPE TIME 170.1
+STD 9.38776
+===========================================================
+MOVE DISTANCE 15
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 68.6425
+STD 1.47355
+AVERAGE LAST AGENT ESCAPE TIME 171.1
+STD 8.46817
+===========================================================
+UP
+MOVE DISTANCE 5
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 96.8864
+STD 14.6709
+AVERAGE LAST AGENT ESCAPE TIME 253.48
+STD 41.9646
+===========================================================
+MOVE DISTANCE 10
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 109.382
+STD 2.22427
+AVERAGE LAST AGENT ESCAPE TIME 290.55
+STD 6.61268
+===========================================================
+MOVE DISTANCE 15
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 109.566
+STD 2.21393
+AVERAGE LAST AGENT ESCAPE TIME 290.94
+STD 8.49214
+===========================================================
+MOVE DISTANCE 5
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 90.1003
+STD 13.3081
+AVERAGE LAST AGENT ESCAPE TIME 228.77
+STD 42.6225
+===========================================================
+MOVE DISTANCE 10
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 109.774
+STD 2.45162
+AVERAGE LAST AGENT ESCAPE TIME 291.03
+STD 7.58875
+===========================================================
+MOVE DISTANCE 15
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 109.606
+STD 2.45576
+AVERAGE LAST AGENT ESCAPE TIME 291.27
+STD 8.33769
+===========================================================
+LEFT_UP
+MOVE DISTANCE 5
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 98.0415
+STD 8.82214
+AVERAGE LAST AGENT ESCAPE TIME 241.65
+STD 33.5432
+===========================================================
+MOVE DISTANCE 10
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 104.197
+STD 8.91948
+AVERAGE LAST AGENT ESCAPE TIME 269.17
+STD 31.991
+===========================================================
+MOVE DISTANCE 15
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 104.441
+STD 8.23998
+AVERAGE LAST AGENT ESCAPE TIME 270.67
+STD 31.1654
+===========================================================
+UP
+MOVE DISTANCE 5
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 78.8573
+STD 2.23164
+AVERAGE LAST AGENT ESCAPE TIME 205.93
+STD 8.83432
+===========================================================
+MOVE DISTANCE 10
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 76.6168
+STD 3.98438
+AVERAGE LAST AGENT ESCAPE TIME 193.19
+STD 9.07931
+===========================================================
+MOVE DISTANCE 15
+**********************************************************
+MOVE OBSTACLE DISTANCE 10
+AVERAGE EVACUATION TIME 77.493
+STD 4.71696
+AVERAGE LAST AGENT ESCAPE TIME 195.14
+STD 13.5662
+===========================================================

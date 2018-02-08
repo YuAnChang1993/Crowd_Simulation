@@ -1,0 +1,10 @@
+AGENT 0 Leader, Neuroticism = 0.707
+AGENT 1 Leader, Neuroticism = 0.644
+AGENT 2 Leader, Neuroticism = 0.466
+AGENT 3 Leader, Neuroticism = 0.783
+AGENT 4 Leader, Neuroticism = 0.602
+AGENT 0 Memember. Neuroticism = 0.707
+AGENT 1 Memember. Neuroticism = 0.644
+AGENT 2 Memember. Neuroticism = 0.466
+AGENT 3 Memember. Neuroticism = 0.783
+AGENT 4 Memember. Neuroticism = 0.602

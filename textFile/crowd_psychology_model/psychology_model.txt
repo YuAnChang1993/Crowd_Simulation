@@ -1,0 +1,9 @@
+stress_accumulation_rate 0.38
+max_stress 0.8
+power_law_coefficient 0.12
+power_law_exponent 0.2
+standard_deviation 1
+interpersonal_stress_radius 5
+area_stress_intensity 2
+TENDENCY 0.1
+TIME_EFFECT 80

@@ -1,0 +1,22 @@
+size 20
+agent_number 100
+decay 0.4
+diffusion 0.4
+ks 3
+kd 0.5
+ki 1
+kw 0.5
+meu 0.2
+kss 0.4
+kdd 1
+waiting 0.01
+density 0.04
+d_max 5
+EXIT 0 15 3 Up
+EXIT 15 0 3 Right
+MANUAL
+.AUTOMATIC
+LeaderProportion 0.1
+SFF_TYPE 1
+NEW_SEED 1
+SHOW_AGENT_INFO 0
