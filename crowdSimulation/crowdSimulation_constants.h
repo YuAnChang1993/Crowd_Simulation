@@ -1,0 +1,40 @@
+//
+// Author: Sai-Keung WONG
+// Email:	cswingo@cs.nctu.edu.tw
+//			wingo.wong@gmail.com
+//
+// Date: 2015/08/13
+//
+#ifndef __CROWD_SIMULATION_CONSTANTS_H_
+#define __CROWD_SIMULATION_CONSTANTS_H_
+
+#define CS_FOLDERNAME_CONFIG_AGENT_GEN		"config_agent_gen"
+#define CS_FOLDERNAME_CONFIG_APP			"config_app"
+#define CS_FOLDERNAME_CONFIG_ENV			"config_env"
+#define CS_FOLDERNAME_CONFIG_PATH			"config_path"
+#define CS_FOLDERNAME_CONFIG_TEXTURE		"config_texture"
+#define CS_FOLDERNAME_CONFIG_PSO_TRAINING	"pso_training_config"
+
+#define CS_FILENAME_CONFIG_APP				"app_config.txt"
+#define CS_FILENAME_CONFIG_AGENT_GEN		"gen.txt"
+#define CS_FILENAME_CONFIG_ENV				"env.txt"
+#define CS_FILENAME_CONFIG_PATH				"path.txt"
+#define CS_FILENAME_CONFIG_PSO_TRAINING		"pso.txt"
+#define CS_FILENAME_CONFIG_TEXTURE			"config_texture.txt"
+
+#define CS_APP_CONFIG_TAG_MAXIMUM_AGENT	"MAXIMUM_AGENT"
+#define CS_APP_CONFIG_TAG_MAP2D_GRID_DX	"MAP2D_GRID_DX"
+#define CS_APP_CONFIG_TAG_MAP2D_GRID_DZ	"MAP2D_GRID_DZ"
+#define CS_APP_CONFIG_TAG_AGENT_COLOR	"AGENT_COLOR"
+#define CS_APP_CONFIG_TAG_AGENT_HIGHLIGHT_COLOR	"AGENT_HIGHLIGHT_COLOR"
+#define CS_APP_CONFIG_TAG_ENVIRONMENT		"ENVIRONMENT"
+#define CS_APP_CONFIG_TAG_PATH_DATA			"PATH_DATA"
+#define CS_APP_CONFIG_TAG_AGENT_GENERATOR	"AGENT_GENERATOR"
+#define CS_APP_CONFIG_TAG_TEXTURE_DATA		"TEXTURE_DATA"
+#define CS_APP_CONFIG_TAG_PSO_TRAINING		"PSO_TRAINING"
+
+
+
+
+
+#endif
