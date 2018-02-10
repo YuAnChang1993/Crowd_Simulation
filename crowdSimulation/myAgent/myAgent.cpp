@@ -355,8 +355,8 @@ void CS_CELLULAR_AUTOMATA::updateVisibleAgent(){
 		agent[i].visible_area.clear();
 		agent[i].visible_area_advancesFF.clear();
 		collect_visible_bystander(i);
-		if (visual_direction.first == 0 && visual_direction.second == 0)
-			continue;
+		//if (visual_direction.first == 0 && visual_direction.second == 0)
+		//	continue;
 		for (int x = -VISIBILITY_GRID_LENGTH; x <= VISIBILITY_GRID_LENGTH; x++)
 		{
 			for (int z = -VISIBILITY_GRID_LENGTH; z <= VISIBILITY_GRID_LENGTH; z++)
@@ -421,7 +421,7 @@ void CS_CELLULAR_AUTOMATA::updateVisibleAgent(){
 						int e_id = cell[obstacles[o_id].component[0].first][obstacles[o_id].component[0].second].exit_id;
 						if (e_id != -1)
 						{
-							agent[i].blockByExit[e_id] = 1;
+							agent[i].blockByExit[e_id] = 1; 
 							agent[i].currentVisibleBlockedExit = e_id;
 						}
 						if (mTimeCounter >= model->mMoveObstacleTime && !agent[i].mVolunteered)
@@ -1313,7 +1313,13 @@ float CS_CELLULAR_AUTOMATA::getLeaderEffect(int id){
 
 float CS_CELLULAR_AUTOMATA::getTimeInfluence(float neuroticism){
 
-	return 1 - exp(-mTimeCounter / agent_psychology.timeEffect);
+	
+	return 1 - exp((double)-mTimeCounter / (agent_psychology.timeEffect * (1 - neuroticism)));
+}
+
+float CS_CELLULAR_AUTOMATA::getWeightedSum_EmotionIntention(int id){
+
+	//return 0.3f *  
 }
 
 float AGENT::getDistanceWeight(PAIR_INT pos){

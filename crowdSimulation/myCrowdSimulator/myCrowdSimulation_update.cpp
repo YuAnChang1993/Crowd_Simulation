@@ -33,12 +33,15 @@ void MY_CROWD_SIMULATOR::update_State_Simulation(){
 		//mCelluarAutomata->update_volunteer_towardToObstacle_action(); //2017/09/22
 		//mCelluarAutomata->update_blocked_obstacle_position(); //2017/09/22
 		//mCelluarAutomata->update_agent_closeToObstalce(); //2017/10/11
+		mCelluarAutomata->updateInformationBetweenAgents();
+		mCelluarAutomata->printDebugInformation();
 		if (mCelluarAutomata->getExperimentType() == 1)
 			doExperiment();
 		if (next_simulation)
 			next_simulation = false;
 		else
 			Sleep(milliseconds);
+		//mCelluarAutomata->outputTimeInfluenceStrength();
 	}
 	else
 	{

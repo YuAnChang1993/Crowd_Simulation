@@ -211,6 +211,7 @@ public:
 		mLeaderDistrubution = 0;
 		mSameSeed = false;
 		mAnxietyExperiment = 0;
+		mCommunication = 0;
 	}
 	float decay;
 	float diffusion;
@@ -255,6 +256,7 @@ public:
 	int mVisableType;
 	int mLeaderDistrubution;
 	int mAnxietyExperiment;
+	int mCommunication;
 	bool mRecordVolunteerEvacuationTime;
 	bool start; //control when the simulation start
 	bool out;
@@ -851,6 +853,7 @@ public:
 	void updateTimeStep();
 	void updateDensityAroundObstacle();
 	void updateScene();
+	void updateInformationBetweenAgents();
 	void collectAverageAnxietyAroundObserveAgent();
 	void load_simulation();
 	void resolve_conflicts();
@@ -950,8 +953,10 @@ public:
 	void outputMoveObstacleDistanceExperiment();
 	void outputObstacleLocatedExperiment();
 	void outputStatisticsOnAnxiety_LeaderAndMember();
+	void outputTimeInfluenceStrength();
 	void generateRandomAgentOrder();
 	void assignColorProportion();
+	void printDebugInformation();
 	string get_remain_agent();
 	string get_through_timeStep();
 	string get_through_time();
@@ -1102,6 +1107,7 @@ protected:
 	float getTimeInfluence(float);
 	float combinationFunction(int); //a_id
 	float testCombinationFunction(int, float, float); //a_id, tendency, bias
+	float getWeightedSum_EmotionIntention(int); //a_id
 	bool check_intersect(vector3, vector3, int, int); //node1, node2, edgeID1, edgeID2
 	bool check_member_arrival(int); // leader ID
 	bool check_agentDistanceNearestThanObstacle(int);

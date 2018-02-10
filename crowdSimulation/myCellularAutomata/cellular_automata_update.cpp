@@ -1372,10 +1372,12 @@ void CS_CELLULAR_AUTOMATA::update_agent_anxiety(){
 		if (agent[i].compressive_leader)
 		{
 			agent[i].anxiety_variation.push_back(anx);
+			//cout << "leader " << combinationFunction(i) - anx << endl;
 		}
 		if (i < 10)
 		{
 			agent[i].anxiety_variation.push_back(anx);
+			//cout << combinationFunction(i) - anx << endl;
 		}
 	}
 	float total = 0;
@@ -1408,6 +1410,7 @@ void CS_CELLULAR_AUTOMATA::update_agent_anxiety(){
 void CS_CELLULAR_AUTOMATA::update_agent_willness(){
 
 	float alpha = 1.5f;
+	vector<float> tempWillness(model->agent_number);
 	for (int i = 0; i < model->agent_number; i++)
 	{
 		//agent[i].psychology.willness = (agent_psychology.anxiety_weight * (1 - agent[i].anxiety)) / model->travel_time_step;
@@ -1430,13 +1433,18 @@ void CS_CELLULAR_AUTOMATA::update_agent_willness(){
 		//agent[i].psychology.willness = (agent[i].mPersonality.conscientiousness + 1 - agent[i].anxiety) * model->travel_time_step /*- (1-agent[i].psychology.leadership)*/;
 		//cout << agent[i].psychology.willness << endl;
 		//agent[i].psychology.willness = 1 - (1 / (1 + exp(-1 * (agent[i].anxiety - (1 - guiParameter.willing_threshold)))));
-		agent[i].psychology.willness = float(1 - agent[i].anxiety);
-		agent[i].psychology.willness = 1.0f;
+		//agent[i].psychology.willness = float(1 - agent[i].anxiety);
+		//agent[i].psychology.willness = 1.0f;
 		//cout << agent[i].psychology.willness << endl;
 		//if (i < 10 && !agent[i].arrival)
 		//	cout << agent[i].anxiety << " " << agent[i].psychology.willness << ",  ";
+
+		//tempWillness[i] = agent[i].psychology.willness + 
 	}
-	//cout << endl;
+	for (int i = 0; i < model->agent_number; i++)
+	{
+		agent[i].psychology.willness = tempWillness[i];
+	}
 }
 
 void CS_CELLULAR_AUTOMATA::update_agent_blockedByObstacle(){
@@ -1466,6 +1474,77 @@ void CS_CELLULAR_AUTOMATA::updateScene(){
 	compute_staticFF();
 	compute_clean_sFF();
 	guiParameter.mEditingMode = 0;
+}
+
+void CS_CELLULAR_AUTOMATA::updateInformationBetweenAgents(){
+
+	if (model->mCommunication == 0)
+		return;
+	vector<vector<int>> mExitBlock(model->agent_number);
+	for (unsigned int i = 0; i < model->agent_number; i++)
+	{
+		mExitBlock[i].resize(mExit.size());
+		for (unsigned int j = 0; j < mExitBlock[i].size(); j++)
+		{
+			mExitBlock[i][j] = agent[i].blockByExit[j];
+		}
+	}
+	for (unsigned int i = 0; i < model->agent_number; i++)
+	{
+		if (agent[i].arrival)
+			continue;
+		int x = agent[i].position.first;
+		int z = agent[i].position.second;
+		int contactAgentID;
+		vector<int> mContactAgent;
+		double rnd;
+		if (isValid(x + 1,z) && cell[x + 1][z].occupied == 1)
+		{
+			contactAgentID = cell[x + 1][z].occupant_id;
+			rnd = (double)rand() / RAND_MAX;
+			if (rnd > 0.5f)
+				mContactAgent.push_back(contactAgentID);
+		}
+		if (isValid(x - 1, z) && cell[x - 1][z].occupied == 1)
+		{
+			contactAgentID = cell[x - 1][z].occupant_id;
+			rnd = (double)rand() / RAND_MAX;
+			if (rnd > 0.5f)
+				mContactAgent.push_back(contactAgentID);
+		}
+		if (isValid(x, z + 1) && cell[x][z + 1].occupied == 1)
+		{
+			contactAgentID = cell[x][z + 1].occupant_id;
+			rnd = (double)rand() / RAND_MAX;
+			if (rnd > 0.5f)
+				mContactAgent.push_back(contactAgentID);
+		}
+		if (isValid(x, z - 1) && cell[x][z - 1].occupied == 1)
+		{
+			contactAgentID = cell[x][z - 1].occupant_id;
+			rnd = (double)rand() / RAND_MAX;
+			if (rnd > 0.5f)
+				mContactAgent.push_back(contactAgentID);
+		}
+		for (unsigned int j = 0; j < mContactAgent.size(); j++)
+		{
+			int a_id = mContactAgent[j];
+			for (unsigned int k = 0; k < mExit.size(); k++)
+			{
+				if (agent[i].blockByExit[k] == 1)
+				{
+					mExitBlock[a_id][k] = 1;
+				}
+			}
+		}
+	}
+	for (unsigned int i = 0; i < model->agent_number; i++)
+	{
+		for (unsigned int j = 0; j < mExitBlock[i].size(); j++)
+		{
+			agent[i].blockByExit[j] = mExitBlock[i][j];
+		}
+	}
 }
 
 void CS_CELLULAR_AUTOMATA::collectAverageAnxietyAroundObserveAgent(){

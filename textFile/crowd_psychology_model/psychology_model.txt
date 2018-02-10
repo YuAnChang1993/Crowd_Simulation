@@ -6,4 +6,4 @@ standard_deviation 1
 interpersonal_stress_radius 5
 area_stress_intensity 2
 TENDENCY 0.1
-TIME_EFFECT 80
+TIME_EFFECT 200

@@ -382,6 +382,7 @@ void CS_CELLULAR_AUTOMATA::initialize_agent_anxiety(){
 	{
 		agent[i].anxiety = agent[i].mPersonality.neuroticism * (1-cell[agent[i].position.first][agent[i].position.second]._sFF);
 		//cout << cell[agent[i].position.first][agent[i].position.second]._sFF << endl;
+		//agent[i].anxiety = 0.5f;
 	}
 }
 
@@ -464,6 +465,7 @@ void CS_CELLULAR_AUTOMATA::set_group(){
 	}
 	int amount_TwoMemberGroup = model->size2_num;
 	int amount_ThreeMemberGroup = model->size3_num;
+	cout << amount_ThreeMemberGroup << " " << amount_TwoMemberGroup << endl;
 	//seperate agent to the group
 	for (int i = 0; i < amount_TwoMemberGroup; i++)
 	{
@@ -4726,4 +4728,25 @@ void CS_CELLULAR_AUTOMATA::assignColorProportion(){
 	}
 	//cout << a << endl << b << endl << c << endl << d << endl;
 	//cout << mColorProportion[0] << endl << mColorProportion[1] << endl << mColorProportion[2] << endl << mColorProportion[3] << endl;
+}
+
+void CS_CELLULAR_AUTOMATA::printDebugInformation(){
+
+	for (unsigned int i = 0; i < model->agent_number; i++)
+	{
+		if (agent[i].arrival)
+			continue;
+		if (i > 10)
+			continue;
+		/*if (agent[i].compressive_leader)
+			cout << "Leader" << endl;
+		else
+			cout << "Member" << endl;
+		for (unsigned int j = 0; j < agent[i].visible_agentID.size(); j++)
+		{
+			cout << getContagionStrength(i, agent[i].visible_agentID[j]) << endl;
+		}
+		cout << "--------------------------------------------------" << endl;*/
+	}
+	//cout << getTimeInfluence(1) << endl;
 }

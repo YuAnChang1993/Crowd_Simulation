@@ -18,59 +18,69 @@ void CS_CELLULAR_AUTOMATA::read_data(){
 	{
 		string dataType;
 		file >> dataType;
-		if (dataType == "size")
+		if (dataType == "MAP_SIZE")
 		{
 			file >> model->size;
 		}
-		if (dataType == "agent_number")
+		if (dataType == "DENSITY_OF_AGENT")
 		{
-			file >> model->agent_number;
+			float density;
+			file >> density;
+			model->agent_number = (int)model->size * model->size * density;
 		}
-		if (dataType == "decay")
+		if (dataType == "NUMBER_OF_GROUP_SIZE_TWO")
+		{
+			file >> model->size2_num;
+		}
+		if (dataType == "NUMBER_OF_GROUP_SIZE_THREE")
+		{
+			file >> model->size3_num;
+		}
+		if (dataType == "DECAY")
 		{
 			file >> model->decay;
 		}
-		if (dataType == "diffusion")
+		if (dataType == "DIFFUSION")
 		{
 			file >> model->diffusion;
 		}
-		if (dataType == "ks")
+		if (dataType == "KS")
 		{
 			file >> model->ks;
 		}
-		if (dataType == "kd")
+		if (dataType == "KD")
 		{
 			file >> model->kd;
 		}
-		if (dataType == "ki")
+		if (dataType == "KI")
 		{
 			file >> model->ki;
 		}
-		if (dataType == "kw")
+		if (dataType == "KW")
 		{
 			file >> model->kw;
 		}
-		if (dataType == "kss")
+		if (dataType == "KSS")
 		{
 			file >> model->ks_member;
 		}
-		if (dataType == "kdd")
+		if (dataType == "KDD")
 		{
 			file >> model->kd_member;
 		}
-		if (dataType == "waiting")
+		if (dataType == "WAITING")
 		{
 			file >> model->waiting;
 		}
-		if (dataType == "meu")
+		if (dataType == "MEU")
 		{
 			file >> model->meu;
 		}
-		if (dataType == "density")
+		if (dataType == "DENSITY")
 		{
 			file >> model->density;
 		}
-		if (dataType == "d_max")
+		if (dataType == "D_MAX")
 		{
 			file >> model->d_max;
 		}
@@ -194,6 +204,10 @@ void CS_CELLULAR_AUTOMATA::read_data(){
 		if (dataType == "ANXIETY_EXPERIMENT")
 		{
 			file >> model->mAnxietyExperiment;
+		}
+		if (dataType == "ENABLE_AGENT_COMMUNICATION")
+		{
+			file >> model->mCommunication;
 		}
 		if (file.eof())
 			break;
@@ -963,6 +977,13 @@ void CS_CELLULAR_AUTOMATA::outputObstacleLocatedExperiment(){
 	//mExperimentData.mTotalAverageEvaciationTime.swap(mt0);
 	//mExperimentData.mTotalAverageLastAgentEvacuationTime.swap(mt1);
 	model->mTimes = 0;
+}
+
+void CS_CELLULAR_AUTOMATA::outputTimeInfluenceStrength(){
+
+	outputFile.open("crowd_cellularAutomata/cellular_exponential_timeInfluence.txt", std::ios_base::app);
+	outputFile << getTimeInfluence(1) << endl;
+	outputFile.close();
 }
 
 void CS_CELLULAR_AUTOMATA::set_obstacle(){
