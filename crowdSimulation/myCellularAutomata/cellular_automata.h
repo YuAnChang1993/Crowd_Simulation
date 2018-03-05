@@ -1142,6 +1142,7 @@ protected:
 	bool check_obstacle_movement_block(int); //o_id
 	bool check_volunteer_movement_block(int); //a_id
 	bool check_moveToLowSFF(int o_id);
+	bool check_groupWill(int, int); //a_id, o_id
 	bool determine_leader_waiting(bool, bool);//parameter: is leader or not; second: other member leaver or not
 	bool determine_leader_waiting(bool, int);
 	bool opposite_direction(int, float);

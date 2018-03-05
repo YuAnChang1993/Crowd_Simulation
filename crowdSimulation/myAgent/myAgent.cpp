@@ -194,7 +194,7 @@ void CS_CELLULAR_AUTOMATA::decideToBeVolunteer(int id){
 	float probability = (float)rand() / RAND_MAX;
 	//cout << "willness: " << agent[id].psychology.willness << endl;
 	//cout << obstacles[o_id].mWillThreshold << endl;
-	if (/*probability < agent[id].psychology.willness*/agent[id].psychology.willness >= obstacles[o_id].mWillThreshold/*guiParameter.willing_threshold WILLNESS_THRESHOLD*/ && min_com != -1 && !agent[id].volunteer)
+	if (/*probability < agent[id].psychology.willness*/agent[id].psychology.willness >= obstacles[o_id].mWillThreshold && min_com != -1 && !agent[id].volunteer && check_groupWill(id, o_id))
 	{
 		if (obstacles[o_id].enough_volunteers)
 			return;
@@ -1446,4 +1446,18 @@ float AGENT::averageResidualAnxiety(){
 		total += remain_anxiety[i];
 	}
 	return total / (remain_anxiety.size()+0.0001f) / 100;
+}
+
+bool CS_CELLULAR_AUTOMATA::check_groupWill(int id, int o_id){
+
+	int gID = agent[id].group_id;
+	for (unsigned int i = 0; i < agent_group[gID].member.size(); i++)
+	{
+		int a_id = agent_group[gID].member[i];
+		if (agent[a_id].psychology.willness < obstacles[o_id].mWillThreshold)
+		{
+			return false;
+		}
+	}
+	return true;
 }
