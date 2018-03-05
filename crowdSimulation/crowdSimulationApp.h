@@ -71,6 +71,7 @@ protected:
 	bool mFlgShow_TFF;
 	bool mFlgShow_EvacuationTime;
 	bool mFlgShow_AgentEscapeExit;
+	bool mFlgShow_AgentFaceDirection;
 	int mFlg_Enabled_Draw;
 	int mFlgShow_ClickedAgentInformation;
 
@@ -180,6 +181,7 @@ public:
 	void setFlgShowTFF(bool flg);
 	void setFlgShowAgentEvacuationTime(bool flg);
 	void setFlgShowAgentEscapeExit(bool flg);
+	void setFlgShowAgentFaceDirection(bool flg);
 	void sendFlgCurrentExitBlockAgent();
 
 	bool handleKeyEvent( unsigned char key );

@@ -64,6 +64,7 @@ CROWD_SIMULATION_APP::CROWD_SIMULATION_APP( )
 	mFlgShow_TFF = false;
 	mFlgShow_EvacuationTime = false;
 	mFlgShow_AgentEscapeExit = false;
+	mFlgShow_AgentFaceDirection = false;
 	mFlg_Enabled_Draw = 1;
 
 	mFlgShow_ClickedAgentInformation = true;
@@ -294,6 +295,11 @@ void CROWD_SIMULATION_APP::setFlgShowAgentEscapeExit(bool flg)
 {
 	mFlgShow_AgentEscapeExit = flg;
 	sendFlgCurrentExitBlockAgent();
+}
+
+void CROWD_SIMULATION_APP::setFlgShowAgentFaceDirection(bool flg)
+{
+	mFlgShow_AgentFaceDirection = flg;
 }
 
 void CROWD_SIMULATION_APP::sendFlgCurrentExitBlockAgent()

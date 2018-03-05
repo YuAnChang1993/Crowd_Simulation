@@ -146,7 +146,7 @@ void CS_CELLULAR_AUTOMATA::update_agent_position(){
 	if (model->remain_agent == 0 && !model->out_anxiety)
 	{
 		model->out_anxiety = true;
-		outputAnxietyVariation();
+		//outputAnxietyVariation();
 		outputStatisticInfo();
 		outputMaxDFF();
 		outputStatisticsOnAnxiety_LeaderAndMember();
@@ -1438,8 +1438,18 @@ void CS_CELLULAR_AUTOMATA::update_agent_willness(){
 		//cout << agent[i].psychology.willness << endl;
 		//if (i < 10 && !agent[i].arrival)
 		//	cout << agent[i].anxiety << " " << agent[i].psychology.willness << ",  ";
-
-		//tempWillness[i] = agent[i].psychology.willness + 
+		if (agent[i].arrival)
+			continue;
+		float will = agent[i].psychology.willness;
+		tempWillness[i] = will + getContagionStrengthFromContactAgents(i) * (willCombinationFunction(i) - will);
+		if (tempWillness[i] > 1)
+			tempWillness[i] = 1;
+		if (tempWillness[i] < 0)
+			tempWillness[i] = 0;
+		if (i < 10)
+		{
+			//cout << tempWillness[i] << endl;
+		}
 	}
 	for (int i = 0; i < model->agent_number; i++)
 	{
@@ -1489,6 +1499,10 @@ void CS_CELLULAR_AUTOMATA::updateInformationBetweenAgents(){
 			mExitBlock[i][j] = agent[i].blockByExit[j];
 		}
 	}
+	//double p = exp(-3 * exp(double(0.9)));
+	//cout << p << endl;
+	//p = exp(-3 * exp(double(0)));
+	//cout << p << endl;
 	for (unsigned int i = 0; i < model->agent_number; i++)
 	{
 		if (agent[i].arrival)
@@ -1498,32 +1512,43 @@ void CS_CELLULAR_AUTOMATA::updateInformationBetweenAgents(){
 		int contactAgentID;
 		vector<int> mContactAgent;
 		double rnd;
+		float anx = agent[i].anxiety;
+		double prob = exp(-30 * exp(double(1 - anx)));
+		//prob = model->mCommunicationProbability;
 		if (isValid(x + 1,z) && cell[x + 1][z].occupied == 1)
 		{
 			contactAgentID = cell[x + 1][z].occupant_id;
 			rnd = (double)rand() / RAND_MAX;
-			if (rnd > 0.5f)
+			//if (model->mCommunicationProbability > anx)
+			//	mContactAgent.push_back(contactAgentID);
+			if (model->mCommunicationProbability < prob)
 				mContactAgent.push_back(contactAgentID);
 		}
 		if (isValid(x - 1, z) && cell[x - 1][z].occupied == 1)
 		{
 			contactAgentID = cell[x - 1][z].occupant_id;
 			rnd = (double)rand() / RAND_MAX;
-			if (rnd > 0.5f)
+			//if (model->mCommunicationProbability > anx)
+			//	mContactAgent.push_back(contactAgentID);
+			if (model->mCommunicationProbability < prob)
 				mContactAgent.push_back(contactAgentID);
 		}
 		if (isValid(x, z + 1) && cell[x][z + 1].occupied == 1)
 		{
 			contactAgentID = cell[x][z + 1].occupant_id;
 			rnd = (double)rand() / RAND_MAX;
-			if (rnd > 0.5f)
+			//if (model->mCommunicationProbability > anx)
+			//	mContactAgent.push_back(contactAgentID);
+			if (model->mCommunicationProbability < prob)
 				mContactAgent.push_back(contactAgentID);
 		}
 		if (isValid(x, z - 1) && cell[x][z - 1].occupied == 1)
 		{
 			contactAgentID = cell[x][z - 1].occupant_id;
 			rnd = (double)rand() / RAND_MAX;
-			if (rnd > 0.5f)
+			//if (model->mCommunicationProbability > anx)
+			//	mContactAgent.push_back(contactAgentID);
+			if (model->mCommunicationProbability < prob)
 				mContactAgent.push_back(contactAgentID);
 		}
 		for (unsigned int j = 0; j < mContactAgent.size(); j++)

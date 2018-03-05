@@ -16,6 +16,7 @@
 #include "../openGLbasic/opengl_stuff.h"
 #include "../primitives/vector3d.h"
 #include "../myDijkstra/myDijkstra.h"
+#include <queue>
 
 #define GROUP_RADIUS 10.0f
 #define ADDITION_FORCE 2.0f
@@ -45,6 +46,7 @@
 #define DYNAMIC_VALUE 1.0f
 #define LOWER_INTERVAL 0.9f
 #define HIGHER_INTERVAL 0.99f
+#define OBSTACLE_UNIT 0.05f
 
 using namespace std;
 
@@ -211,7 +213,10 @@ public:
 		mLeaderDistrubution = 0;
 		mSameSeed = false;
 		mAnxietyExperiment = 0;
+		mTimeEffectExperiment = 0;
+		mTendencyExperiment = 0;
 		mCommunication = 0;
+		mCommunicationProbability = 0.5f;
 	}
 	float decay;
 	float diffusion;
@@ -230,6 +235,7 @@ public:
 	float density_thresold;
 	float travel_time_step;
 	float mFriction;
+	float mCommunicationProbability;
 	int size;
 	int agent_number;
 	int obstacle_size;
@@ -256,6 +262,8 @@ public:
 	int mVisableType;
 	int mLeaderDistrubution;
 	int mAnxietyExperiment;
+	int mTimeEffectExperiment;
+	int mTendencyExperiment;
 	int mCommunication;
 	bool mRecordVolunteerEvacuationTime;
 	bool start; //control when the simulation start
@@ -583,7 +591,9 @@ public:
 class AGENT_PSYCHOLOGY{
 public:
 	AGENT_PSYCHOLOGY(){
-		anxiety_weight = 10.0f;
+		anxiety_weight = 0.3f;
+		will_weight = 0.4f;
+		groupWill_weight = 0.3f;
 		bias = 0.0f;
 		tendency = 0.1f;
 		timeEffect = 25;
@@ -591,9 +601,12 @@ public:
 	int actionType;
 	int obstacle_moveType;
 	float anxiety_weight;
+	float will_weight;
+	float groupWill_weight;
 	float bias;
 	float tendency;
 	float timeEffect;
+	
 };
 
 class AGENT_GROUP{
@@ -643,6 +656,7 @@ public:
 		left = false;
 		mHaveDes = false;
 		stuck_time = 0;
+		mWillThreshold = 0;
 	}
 	float minx, maxx, minz, maxz;
 	vector<vector3> nodes;
@@ -702,6 +716,8 @@ public:
 	vector<PAIR_INT> moveDestination;
 	bool mHaveDes;
 	int stuck_time;
+	//
+	float mWillThreshold;
 };
 
 class Exit{
@@ -924,6 +940,8 @@ public:
 	void set_colorTableNormalizeValue(float);
 	void set_SameSeed();
 	void set_Bias();
+	void set_TimeEffect();
+	void set_Tendency();
 	void set_ObserveAgent();
 	void change_visible_state();
 	void get_agent_info(int, int);
@@ -954,6 +972,7 @@ public:
 	void outputObstacleLocatedExperiment();
 	void outputStatisticsOnAnxiety_LeaderAndMember();
 	void outputTimeInfluenceStrength();
+	void outputTendencyInfluence();
 	void generateRandomAgentOrder();
 	void assignColorProportion();
 	void printDebugInformation();
@@ -1102,10 +1121,15 @@ protected:
 	float getImpactFromOtherAgents(int); //a_id
 	float getContagionStrengthFromContactAgents(int); //a_id
 	float getContagionStrength(int, int); //receiverID, senderID
+	float getContagionStrengthFromContactLeader(int); //a_id
 	float getInfluenceStrengthFromContactAgents(int); //a_id
+	float getWillInfluenceStrengthFromContactAgents(int); //a_id
 	float getLeaderEffect(int); //a_id
+	float getAverageLeaderNeuroticism(int); //a_id
 	float getTimeInfluence(float);
+	float getGroupEffect(int); //a_id
 	float combinationFunction(int); //a_id
+	float willCombinationFunction(int); //a_id
 	float testCombinationFunction(int, float, float); //a_id, tendency, bias
 	float getWeightedSum_EmotionIntention(int); //a_id
 	bool check_intersect(vector3, vector3, int, int); //node1, node2, edgeID1, edgeID2
@@ -1185,6 +1209,7 @@ private:
 	vector<int> mObserverAgent;
 	vector<vector<float>> mAverageAnxeityAroundObserveAgent;
 	vector<vector<float>> mObserveAgentAnxiety;
+	queue<CELL_BFS> distance_queue;
 	//
 	ifstream file;
 	ofstream outputFile;

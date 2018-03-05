@@ -205,9 +205,21 @@ void CS_CELLULAR_AUTOMATA::read_data(){
 		{
 			file >> model->mAnxietyExperiment;
 		}
+		if (dataType == "TIME_EFFECT_EXPERIMENT")
+		{
+			file >> model->mTimeEffectExperiment;
+		}
+		if (dataType == "TENDENCY_EXPERIMENT")
+		{
+			file >> model->mTendencyExperiment;
+		}
 		if (dataType == "ENABLE_AGENT_COMMUNICATION")
 		{
 			file >> model->mCommunication;
+		}
+		if (dataType == "COMMUNICATION_PROB")
+		{
+			file >> model->mCommunicationProbability;
 		}
 		if (file.eof())
 			break;
@@ -264,6 +276,18 @@ void CS_CELLULAR_AUTOMATA::read_data(){
 		if (dataType == "TIME_EFFECT")
 		{
 			file >> agent_psychology.timeEffect;
+		}
+		if (dataType == "ANXIETY_WEIGHT")
+		{
+			file >> agent_psychology.anxiety_weight;
+		}
+		if (dataType == "WILL_WEIGHT")
+		{
+			file >> agent_psychology.will_weight;
+		}
+		if (dataType == "GROUP_WILL_WEIGHT")
+		{
+			file >> agent_psychology.groupWill_weight;
 		}
 		if (file.eof())
 		{
@@ -568,8 +592,15 @@ void CS_CELLULAR_AUTOMATA::outputStatisticsOnAnxiety_LeaderAndMember(){
 	if (outputFile.fail())
 		return;
 	//cout << mAverageAnxeityAroundObserveAgent.size() << endl;
-	outputFile << "bias: " << agent_psychology.bias << endl;
-	outputFile << "tendency: " << agent_psychology.tendency << endl;
+	if (model->mAnxietyExperiment == 1)
+	{
+		outputFile << "bias: " << agent_psychology.bias << endl;
+		outputFile << "tendency: " << agent_psychology.tendency << endl;
+	}
+	if (model->mTimeEffectExperiment == 1)
+	{
+		outputFile << "timeEffect: " << agent_psychology.timeEffect << endl;
+	}
 	for (unsigned int j = 0; j < mObserverAgent.size(); j++)
 	{
 		outputFile << "AGENT_" << to_string(j) << endl;
@@ -588,8 +619,12 @@ void CS_CELLULAR_AUTOMATA::outputStatisticsOnAnxiety_LeaderAndMember(){
 		}
 	}
 	outputFile << "===========================================================" << endl;
-	if (model->mSameSeed)
+	if (!!model->mAnxietyExperiment)
 		set_Bias();
+	if (!!model->mTimeEffectExperiment)
+		set_TimeEffect();
+	if (!!model->mTendencyExperiment)
+		set_Tendency();
 	//cout << agent_psychology.bias * 10 << endl;
 	outputFile.close();
 }
@@ -983,6 +1018,14 @@ void CS_CELLULAR_AUTOMATA::outputTimeInfluenceStrength(){
 
 	outputFile.open("crowd_cellularAutomata/cellular_exponential_timeInfluence.txt", std::ios_base::app);
 	outputFile << getTimeInfluence(1) << endl;
+	//cout << getTimeInfluence(1) << endl;
+	outputFile.close();
+}
+
+void CS_CELLULAR_AUTOMATA::outputTendencyInfluence(){
+
+	outputFile.open("crowd_cellularAutomata/cellular_experiment_tendency.txt", std::ios_base::app);
+	
 	outputFile.close();
 }
 
@@ -1072,6 +1115,7 @@ void CS_CELLULAR_AUTOMATA::set_obstacle(){
 			o.component = obstacle_component;
 			o.volunteer_id = volunteer_id;
 			o.candidate_id = candidate_id;
+			o.mWillThreshold = (float)obstacle_component.size() * OBSTACLE_UNIT;
 			obstacles.push_back(o);
 			//cout << minx << " " << maxx << " " << minz << " " << maxz << endl;
 		}

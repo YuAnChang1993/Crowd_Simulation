@@ -158,6 +158,11 @@ void MY_CROWD_SIMULATOR::draw_AgentEscapeExit() const{
 	mCelluarAutomata->draw_AgentEscapeExit();
 }
 
+void MY_CROWD_SIMULATOR::draw_AgentFaceDirection() const{
+
+	mCelluarAutomata->draw_agent_face_direction();
+}
+
 void MY_CROWD_SIMULATOR::draw() const{
 
 	mCelluarAutomata->draw_clicked_agent();

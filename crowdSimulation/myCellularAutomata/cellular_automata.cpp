@@ -159,7 +159,6 @@ void CS_CELLULAR_AUTOMATA::initialize_variables(){
 		count += obstacles[j].component.size();
 		obstacles[j].moveDestination.resize(obstacles[j].volunteer_id.size());
 	}
-	//cout << count << endl;
 	volunteer_distance_map.resize(count);
 	for (int j = 0; j < (int)obstacles.size(); j++)
 	{
@@ -197,8 +196,8 @@ void CS_CELLULAR_AUTOMATA::initialize_variables(){
 			computeNewMapWithoutExit(exit_block);
 		}
 	}
-	blocked_obstacles.reserve(obstacles.size() + 1);
-	normal_obstacle.reserve(obstacles.size() + 1);
+	//blocked_obstacles.reserve(obstacles.size() + 1);
+	//normal_obstacle.reserve(obstacles.size() + 1);
 	//cout << model->mMoveDistance << endl;
 	if (agent_psychology.obstacle_moveType == CS_OBSTACLE_AUTOMATIC_MOVE)
 		find_obstacleMustMove();
@@ -276,7 +275,7 @@ void CS_CELLULAR_AUTOMATA::initialize_variables(){
 	{
 		cell[exits[i].first][exits[i].second].cell_type = 1;
 	}
-	if (model->mAnxietyExperiment == 1)
+	if (!!model->mAnxietyExperiment || !!model->mTimeEffectExperiment || !!model->mTendencyExperiment)
 		model->mSameSeed = true;
 	//for (int i = 0; i < wall.size(); i++)
 	//{
@@ -607,7 +606,7 @@ void CS_CELLULAR_AUTOMATA::compute_staticFF(){
 			{
 			case 0:
 				verticalValue = 1.0f;
-				diagonalValue = 1.0f;
+				diagonalValue = 1.5f;
 				break;
 			case 1:
 				verticalValue = 2 * exp(-(mExit[i].width / total_width));
@@ -1075,12 +1074,19 @@ void CS_CELLULAR_AUTOMATA::computeNewMapWithoutExit(int exit_block[]){
 	{
 		FloorFieldMapID += (int)(pow(2, i) * exit_block[i]);
 	}
+	for (int i = 0; i < 4; i++)
+	{
+		cout << exit_block[i] << " ";
+	}
+	cout << endl;
+	//system("pause");
 	//cout << "FloorFieldMapID: " << FloorFieldMapID << endl;
 	if (FloorFieldMapID == pow(2, mExit.size()) - 1)
 		return;
 	//special_distance_map[FloorFieldMapID].clear();
 	//cout << "mExit Size: " << mExit.size() << endl;
 	int e_id = 0;
+	int count = 0;
 	for (int i = 0; i < (int)mExit.size(); i++)
 	{
 		if (exit_block[i] == 1)
@@ -1089,6 +1095,11 @@ void CS_CELLULAR_AUTOMATA::computeNewMapWithoutExit(int exit_block[]){
 		int ez = mExit[i].position.second;
 		int dx = mExit[i].direction.first;
 		int dz = mExit[i].direction.second;
+		//if (cell[ex][ez].obstacle && !obstacles[cell[ex][ez].obstacle_id].block_exit)
+		//	continue;
+		//cout << i << endl;
+		//cout << exp(-20) << endl;
+		//system("pause");
 		for (int j = 0; j < mExit[i].width; j++)
 		{
 			for (int x = 0; x < model->size; x++)
@@ -1101,11 +1112,19 @@ void CS_CELLULAR_AUTOMATA::computeNewMapWithoutExit(int exit_block[]){
 					distance_buffer[x][z].y = z;
 				}
 			}
-			queue<CELL_BFS> distance_queue;
+			//queue<CELL_BFS> distance_queue;
 			int e_x = ex + dx*j;
 			int e_z = ez + dz*j;
 			distance_buffer[e_x][e_z].distance = 0;
 			distance_queue.push(distance_buffer[e_x][e_z]);
+			/*distance_buffer[20][0].distance = 1;
+			distance_queue.push(distance_buffer[20][0]);
+			CELL_BFS t = distance_queue.front();
+			cout << t.distance << endl;
+			distance_queue.pop();
+			t = distance_queue.front();
+			cout << t.distance << endl;
+			system("pause");*/
 			float verticalValue;
 			float diagonalValue;
 			float total_width = 0;
@@ -1127,14 +1146,16 @@ void CS_CELLULAR_AUTOMATA::computeNewMapWithoutExit(int exit_block[]){
 				//cout << diagonalValue << endl;
 				break;
 			}
+			//system("pause");
 			while (!distance_queue.empty())
 			{
 				CELL_BFS temp = distance_queue.front();
 				distance_queue.pop();
 				int x = temp.x;
 				int y = temp.y;
+				//cout << x << " " << y << endl;
+				//cout << count << endl;
 				distance_buffer[x][y].visisted = true;
-
 				if (isValid(x - 1, y) && distance_buffer[x - 1][y].visisted == false && !cell[x - 1][y].obstacle)
 				{
 					if (distance_buffer[x][y].distance + verticalValue < distance_buffer[x - 1][y].distance)
@@ -1199,9 +1220,15 @@ void CS_CELLULAR_AUTOMATA::computeNewMapWithoutExit(int exit_block[]){
 					distance_queue.push(distance_buffer[x - 1][y - 1]);
 				}
 				*/
+				//if (count > 9998)
+				//	system("pause");
+				count++;
 			}
+			//cout << count << endl;
 			special_distance_map[e_id] = distance_buffer;
 			e_id++;
+			//queue<CELL_BFS> empty;
+			//swap(distance_queue, empty);
 		}
 	}
 
@@ -2677,9 +2704,14 @@ double CS_CELLULAR_AUTOMATA::get_probability(int x, int y, int agent_num){
 	//	int o_id = agent[agent_num].blocked_obstacle_id;
 	//	return exp((double)model->kd * cell[x][y].dFF) * exp((double)-model->ks * cell[x][y].specific_sFF[o_id]) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
 	//}
+	float anxietyEffect = 1 - agent[agent_num].anxiety;
+	if (agent[agent_num].compressive_leader && anxietyEffect < agent[agent_num].psychology.leadership)
+		anxietyEffect = agent[agent_num].psychology.leadership;
+	if (anxietyEffect == 0)
+		anxietyEffect = 0.1f;
 	if (agent[agent_num].blocked_obstacle_id == -1)
 	{
-		return exp((double)model->kd * cell[x][y].dFF) * exp((double)-model->ks * (cell[x][y].sFF)) * exp((double)-33 * cell[x][y].aFF) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
+		return exp((double)-model->kd * cell[x][y].dFF) * exp((double)-model->ks * (cell[x][y].sFF) * anxietyEffect) * exp((double)-33 * cell[x][y].aFF) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
 	}
 	int FloorFieldMapID = (int)decodingFloorFieldID(agent[agent_num].blockByExit);
 	//if (agent_num == 467)
@@ -2687,7 +2719,7 @@ double CS_CELLULAR_AUTOMATA::get_probability(int x, int y, int agent_num){
 	//	cout << cell[x][y].aFF << endl;
 	//	cout << x << " " << y << " " << exp((double)model->kd * cell[x][y].dFF) * exp((double)-model->ks * cell[x][y].special_sFF[FloorFieldMapID]) * exp((double)-33 * cell[x][y].aFF) << endl;//* (1 - cell[x][y].occupied) << endl;//* cell[x][y].obstacle_ << endl;
 	//}
-	return exp((double)model->kd * cell[x][y].dFF) * exp((double)-model->ks * cell[x][y].special_sFF[FloorFieldMapID]) * exp((double)-16 * cell[x][y].aFF) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
+	return exp((double)-model->kd * cell[x][y].dFF) * exp((double)-model->ks * cell[x][y].special_sFF[FloorFieldMapID] * anxietyEffect) * exp((double)-33 * cell[x][y].aFF) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
 	
 	//return exp((double)model->kd * cell[x][y].dFF) * exp((double)-model->ks * cell[x][y].sFF) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
 }
@@ -3236,8 +3268,18 @@ void CS_CELLULAR_AUTOMATA::set_SameSeed(){
 }
 
 void CS_CELLULAR_AUTOMATA::set_Bias(){
-
+	
 	agent_psychology.bias += 0.1f;
+}
+
+void CS_CELLULAR_AUTOMATA::set_TimeEffect(){
+
+	agent_psychology.timeEffect += 40;
+}
+
+void CS_CELLULAR_AUTOMATA::set_Tendency(){
+
+	agent_psychology.tendency += 0.2f;
 }
 
 void CS_CELLULAR_AUTOMATA::set_ObserveAgent(){

@@ -60,6 +60,7 @@ namespace
 	int flgShowTFF = false;
 	int flgShowEvacuationTime = false;
 	int flgShowEscapeExit = false;
+	int flgShowAgentFaceDirection = false;
 
 	GLUI_Checkbox *checkbox_showItem_celluarAutomata;
 	GLUI_Checkbox *checkbox_showItem_lattice;
@@ -91,6 +92,7 @@ namespace
 	GLUI_Checkbox *checkbox_showItem_TFF;
 	GLUI_Checkbox *checkbox_showItem_evacuationTIme;
 	GLUI_Checkbox *checkbox_showItem_escapeExit;
+	GLUI_Checkbox *checkbox_showItem_agentFaceDirection;
 	GLUI_Spinner *spinner_cell_exits_segment_x;
 	GLUI_Spinner *spinner_cell_exits_segment_z;
 	GLUI_Spinner *spinner_group_num;
@@ -154,6 +156,7 @@ namespace
 		flgShowTFF = checkbox_showItem_TFF->get_int_val();
 		flgShowEvacuationTime = checkbox_showItem_evacuationTIme->get_int_val();
 		flgShowEscapeExit = checkbox_showItem_escapeExit->get_int_val();
+		flgShowAgentFaceDirection = checkbox_showItem_agentFaceDirection->get_int_val();
 		__crowdSimulationApp->setFlgShowCelluarAutomata((flgShowCelluarAutomata == 0) ? false : true);
 		__crowdSimulationApp->setFlgShowLattice((flgShowLattice == 0) ? false : true);
 		__crowdSimulationApp->setFlgShowColorTable((flgShowColorTable == 0) ? false : true);
@@ -184,6 +187,7 @@ namespace
 		__crowdSimulationApp->setFlgShowTFF((flgShowTFF == 0) ? false : true);
 		__crowdSimulationApp->setFlgShowAgentEvacuationTime((flgShowEvacuationTime == 0) ? false : true);
 		__crowdSimulationApp->setFlgShowAgentEscapeExit((flgShowEscapeExit == 0) ? false : true);
+		__crowdSimulationApp->setFlgShowAgentFaceDirection((flgShowAgentFaceDirection == 0) ? false : true);
 		glutPostRedisplay( );
 	}
 
@@ -395,6 +399,7 @@ void CROWD_SIMULATION_APP::createGLUI( int mainWinID, void (global_idle_func()) 
 	checkbox_showItem_density = new GLUI_Checkbox(glui, "Density around obstacle", &flgShowObstacleDensity, 23, control_show_items); //2017/10/25
 	checkbox_showItem_evacuationTIme = new GLUI_Checkbox(glui, "Agent Evacuation Time", &flgShowEvacuationTime, 26, control_show_items);
 	checkbox_showItem_escapeExit = new GLUI_Checkbox(glui, "Agent Escape Exit", &flgShowEscapeExit, 27, control_show_items);
+	checkbox_showItem_agentFaceDirection = new GLUI_Checkbox(glui, "Agent Face Direction", &flgShowAgentFaceDirection, 28, control_show_items);
 	new GLUI_Spinner(glui, "slow", GLUI_SPINNER_INT, &milliseconds, 5, control_sleep_time);
 
 	new GLUI_Separator(glui);

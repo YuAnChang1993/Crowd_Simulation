@@ -32,24 +32,28 @@ void AGENT::draw_direction(int s){
 	{
 	case _up:
 		ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z - size / 2) * SCALER - OFFSET);
+		ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
 		dir = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 1 - size / 2) * SCALER - OFFSET);
 		left_line_midpoint = (dir + vector3((x - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET)) / 2;
 		right_line_midpoint = (dir + vector3((x + 1 - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET)) / 2;
 		break;
 	case _right:
 		ori = vector3((x - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
+		ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
 		dir = vector3((x + 1 - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
 		left_line_midpoint = (dir + vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 1 - size / 2) * SCALER - OFFSET)) / 2;
 		right_line_midpoint = (dir + vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z - size / 2) * SCALER - OFFSET)) / 2;
 		break;
 	case _down:
 		ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 1 - size / 2) * SCALER - OFFSET);
+		ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
 		dir = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z - size / 2) * SCALER - OFFSET);
 		left_line_midpoint = (dir + vector3((x + 1 - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET)) / 2;
 		right_line_midpoint = (dir + vector3((x - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET)) / 2;
 		break;
 	case _left:
 		ori = vector3((x + 1 - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
+		ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
 		dir = vector3((x - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
 		left_line_midpoint = (dir + vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z - size / 2) * SCALER - OFFSET)) / 2;
 		right_line_midpoint = (dir + vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 1 - size / 2) * SCALER - OFFSET)) / 2;
@@ -57,15 +61,18 @@ void AGENT::draw_direction(int s){
 	case local:
 		break;
 	}
-	glLineWidth(1.5f);
+	//ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z - size / 2) * SCALER - OFFSET);
+	glLineWidth(1.0f);
 	glColor3f(0.0f, 0.0f, 0.0f);
+	//ori = vector3((x - size / 2) * SCALER - OFFSET, -0.1f, (z - size / 2) * SCALER - OFFSET);
 	glBegin(GL_LINES);
+	//ori = vector3((x - size / 2) * SCALER - OFFSET, -0.1f, (z - size / 2) * SCALER - OFFSET);
 	pl_glVertex3f(ori);
 	pl_glVertex3f(dir);
-	pl_glVertex3f(dir);
-	pl_glVertex3f(left_line_midpoint);
-	pl_glVertex3f(dir);
-	pl_glVertex3f(right_line_midpoint);
+	//pl_glVertex3f(dir);
+	//pl_glVertex3f(left_line_midpoint);
+	//pl_glVertex3f(dir);
+	//pl_glVertex3f(right_line_midpoint);
 	glEnd();
 }
 
@@ -186,7 +193,8 @@ void CS_CELLULAR_AUTOMATA::decideToBeVolunteer(int id){
 	//cout << min_com << endl;
 	float probability = (float)rand() / RAND_MAX;
 	//cout << "willness: " << agent[id].psychology.willness << endl;
-	if (/*probability < agent[id].psychology.willness*/agent[id].psychology.willness >= guiParameter.willing_threshold /*WILLNESS_THRESHOLD*/ && min_com != -1 && !agent[id].volunteer)
+	//cout << obstacles[o_id].mWillThreshold << endl;
+	if (/*probability < agent[id].psychology.willness*/agent[id].psychology.willness >= obstacles[o_id].mWillThreshold/*guiParameter.willing_threshold WILLNESS_THRESHOLD*/ && min_com != -1 && !agent[id].volunteer)
 	{
 		if (obstacles[o_id].enough_volunteers)
 			return;
@@ -1273,16 +1281,55 @@ float CS_CELLULAR_AUTOMATA::combinationFunction(int id){
 
 	float influenceStrength = getInfluenceStrengthFromContactAgents(id);
 	float anxiety = agent[id].anxiety;
-	float tendency = agent[id].mTendency;
-	tendency = agent[id].mPersonality.neuroticism;
+	float tendency = agent[id].mPersonality.neuroticism;
+	//tendency = tendency + getContagionStrengthFromContactLeader(id) * (getLeaderEffect(id) - agent[id].mPersonality.neuroticism);
+	float t = getContagionStrengthFromContactLeader(id) * (getLeaderEffect(id) - agent[id].mPersonality.neuroticism);
+	//tendency = getAverageLeaderNeuroticism(id);
+	//if (t != 0)
+	//{
+	//	if (id < 10 && agent[id].position.first < 50 && !agent[id].compressive_leader)
+	//		cout << "id: " << id << ": " << tendency << endl;
+	//}
 	//tendency = 1 - agent[id].psychology.leadership;
 	//tendency = 0.5f;
+	//tendency = agent_psychology.tendency;
 	float bias = agent[id].mBias;
 	bias = agent_psychology.bias;
 	bias = getTimeInfluence(tendency);
 	//bias = 0.0f;
 	return tendency * (bias * (1 - (1 - influenceStrength) * (1 - anxiety)) + (1 - bias) * influenceStrength * anxiety) + (1 - tendency) * influenceStrength;
 	//return (1 - tendency) * (bias * (1 - (1 - influenceStrength) * (1 - anxiety)) + (1 - bias) * influenceStrength * anxiety) + tendency * influenceStrength;
+}
+
+float CS_CELLULAR_AUTOMATA::getWillInfluenceStrengthFromContactAgents(int id){
+
+	float influenceStrength = 0;
+	float overallInfluenceStrength = 0;
+	for (unsigned int i = 0; i < agent[id].visible_agentID.size(); i++)
+	{
+		int a_id = agent[id].visible_agentID[i];
+		float contagionStrength = getContagionStrength(id, a_id);
+		influenceStrength += (contagionStrength * agent[a_id].psychology.willness);
+	}
+	influenceStrength = influenceStrength / (getContagionStrengthFromContactAgents(id) + 0.00001f);
+	overallInfluenceStrength =
+		agent_psychology.will_weight * influenceStrength +
+		agent_psychology.anxiety_weight * (1 - agent[id].anxiety) +
+		agent_psychology.groupWill_weight * getGroupEffect(id);
+	return overallInfluenceStrength;
+}
+
+float CS_CELLULAR_AUTOMATA::willCombinationFunction(int id){
+
+	float influenceStrength = getWillInfluenceStrengthFromContactAgents(id);
+	float will = agent[id].psychology.willness;
+	float tendency = agent[id].mPersonality.neuroticism;
+	//tendency = tendency + getContagionStrengthFromContactLeader(id) * (getLeaderEffect(id) - agent[id].mPersonality.neuroticism);
+	//tendency = getAverageLeaderNeuroticism(id);
+	float bias = agent[id].mBias;
+	bias = agent_psychology.bias;
+	bias = getTimeInfluence(tendency);
+	return tendency * (bias * (1 - (1 - influenceStrength) * (1 - will)) + (1 - bias) * influenceStrength * will) + (1 - tendency) * influenceStrength;
 }
 
 float CS_CELLULAR_AUTOMATA::testCombinationFunction(int id, float _tendency, float _bias){
@@ -1297,23 +1344,82 @@ float CS_CELLULAR_AUTOMATA::testCombinationFunction(int id, float _tendency, flo
 	return tendency * (bias * (1 - (1 - influenceStrength) * (1 - anxiety)) + (1 - bias) * influenceStrength * anxiety) + (1 - tendency) * influenceStrength;
 }
 
-float CS_CELLULAR_AUTOMATA::getLeaderEffect(int id){
+float CS_CELLULAR_AUTOMATA::getContagionStrengthFromContactLeader(int id){
 
-	float leaderEffect = 1;
-	for (int i = 0; i < agent[id].visible_agentID.size(); i++)
+	float contagionStrength = 0;
+	for (unsigned int i = 0; i < agent[id].visible_agentID.size(); i++)
 	{
 		int e = agent[id].visible_agentID[i];
-		if (agent[e].compressive_leader)
-		{
-			leaderEffect = leaderEffect * (1 - agent[i].psychology.leadership) * (1 - agent[id].getDistanceWeight(agent[e].position));
-		}
+		if (!agent[e].compressive_leader)
+			continue;
+		contagionStrength += getContagionStrength(id, e);
 	}
-	return leaderEffect;
+	return contagionStrength;
+}
+
+float CS_CELLULAR_AUTOMATA::getLeaderEffect(int id){
+
+	if (agent[id].compressive_leader)
+		return agent[id].mPersonality.neuroticism;
+
+	float contagionStrength = getContagionStrengthFromContactLeader(id);
+	float leaderEffect = 0;
+	for (unsigned int i = 0; i < agent[id].visible_agentID.size(); i++)
+	{
+		int e = agent[id].visible_agentID[i];
+		if (!agent[e].compressive_leader)
+			continue;
+		float s = getContagionStrength(id, e);
+		//leaderEffect += (agent[e].mPersonality.neuroticism * (s / contagionStrength));
+		leaderEffect += getContagionStrength(id, e) * agent[e].mPersonality.neuroticism;
+	}
+	if (leaderEffect = 0)
+		return agent[id].mPersonality.neuroticism;
+	return leaderEffect / (getContagionStrengthFromContactLeader(id) + 0.00001f);
+}
+
+float CS_CELLULAR_AUTOMATA::getAverageLeaderNeuroticism(int id){
+
+	if (agent[id].compressive_leader)
+		return agent[id].mPersonality.neuroticism;
+	float totalNeuro = agent[id].mPersonality.neuroticism;
+	int totalNum = 1;
+	for (unsigned int i = 0; i < agent[id].visible_agentID.size(); i++)
+	{
+		int a_id = agent[id].visible_agentID[i];
+		if (!agent[a_id].compressive_leader)
+			continue;
+		totalNeuro += agent[a_id].mPersonality.neuroticism;
+		totalNum++;
+	}
+	totalNeuro /= totalNum;
+	return totalNeuro;
+}
+
+float CS_CELLULAR_AUTOMATA::getGroupEffect(int id){
+
+	float overallEffect = 0;
+	float totalLeadership = 0;
+	for (unsigned int i = 0; i < agent_group[agent[id].group_id].member.size(); i++)
+	{
+		int a_id = agent_group[agent[id].group_id].member[i];
+		if (id == a_id)
+			continue;
+		totalLeadership += agent[a_id].psychology.leadership;
+	}
+	for (unsigned int i = 0; i < agent_group[agent[id].group_id].member.size(); i++)
+	{
+		int a_id = agent_group[agent[id].group_id].member[i];
+		if (id == a_id)
+			continue;
+		overallEffect += (agent[a_id].psychology.willness * (agent[a_id].psychology.leadership / (totalLeadership+0.00001f)));
+	}
+	return overallEffect;
 }
 
 float CS_CELLULAR_AUTOMATA::getTimeInfluence(float neuroticism){
 
-	
+	return 1 - exp((double)-mTimeCounter / agent_psychology.timeEffect);
 	return 1 - exp((double)-mTimeCounter / (agent_psychology.timeEffect * (1 - neuroticism)));
 }
 

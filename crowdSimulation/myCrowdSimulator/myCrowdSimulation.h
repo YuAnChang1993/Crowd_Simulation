@@ -46,6 +46,7 @@ public:
 	virtual void draw_TFF() const;
 	virtual void draw_AgentEvacuationTime() const;
 	virtual void draw_AgentEscapeExit() const;
+	virtual void draw_AgentFaceDirection() const;
 	virtual void draw() const;
 	virtual void sendFlgExitColor(bool) const;
 	virtual void show_node_intersectObstacle() const;

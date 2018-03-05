@@ -131,6 +131,10 @@ void CROWD_SIMULATION_APP::draw( ) const
 		mCrowdSimulation->draw_AgentEscapeExit();
 	}
 
+	if (mFlgShow_AgentFaceDirection){
+		mCrowdSimulation->draw_AgentFaceDirection();
+	}
+
 	// 2017/07/06
 	if (mFlgShow_node_intersectObstacle){
 		mCrowdSimulation->show_node_intersectObstacle();

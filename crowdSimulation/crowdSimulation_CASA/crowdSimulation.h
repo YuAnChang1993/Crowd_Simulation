@@ -245,6 +245,7 @@ public:
 	virtual void draw_TFF() const = 0;
 	virtual void draw_AgentEvacuationTime() const = 0;
 	virtual void draw_AgentEscapeExit() const = 0;
+	virtual void draw_AgentFaceDirection() const = 0;
 	virtual void sendFlgExitColor(bool) const = 0;
 	virtual void reset_CellularAutomata() = 0; //2017/04/13
 	virtual void start_CellularAutomata() = 0; //2017/08/06

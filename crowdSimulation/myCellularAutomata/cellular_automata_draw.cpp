@@ -502,7 +502,7 @@ void CS_CELLULAR_AUTOMATA::draw_AgentEscapeExit(){
 		pl_glColor3f(mExitColor[agent[i].mEscapeExit]);
 		ogl_drawSimpleSolidCircleXZ((agent[i].position.first - size / 2) * SCALER, 0.0f, (agent[i].position.second - size / 2) * SCALER, 5, 100);
 	}
-	draw_agent_face_direction();
+	//draw_agent_face_direction();
 	// draw obstacles
 	draw_obstacle();
 }
@@ -541,12 +541,17 @@ void CS_CELLULAR_AUTOMATA::draw_agent_anxiety(){
 		vector3 c = travelLength.getColor_Linear(agent[i].anxiety);
 		glColor3f(c.x, c.y, c.z);
 		//glColor4f(0.0f, 0.0f, 1.0f, agent[i].anxiety);
-		ogl_drawSimpleSolidCircleXZ((agent[i].position.first - size / 2) * SCALER, 0.0f, (agent[i].position.second - size / 2) * SCALER, 5, 100);
+		//ogl_drawSimpleSolidCircleXZ((agent[i].position.first - size / 2) * SCALER, 0.0f, (agent[i].position.second - size / 2) * SCALER, 5, 100);
 		if (agent[i].compressive_leader)
 		{
-			glLineWidth(2.0f);
-			glColor3f(0.69f, 0.17f, 1.0f);
-			ogl_drawSimpleCircleXZ((agent[i].position.first - size / 2) * SCALER, 0.0f, (agent[i].position.second - size / 2) * SCALER, 5, 100);
+			//glLineWidth(2.0f);
+			//glColor3f(0.69f, 0.17f, 1.0f);
+			//ogl_drawSimpleCircleXZ((agent[i].position.first - size / 2) * SCALER, 0.0f, (agent[i].position.second - size / 2) * SCALER, 5, 100);
+			ogl_drawFilledRectXZ((agent[i].position.first + 0.25f - size / 2) * SCALER - OFFSET, (agent[i].position.first + 0.75f - size / 2) * SCALER - OFFSET, (agent[i].position.second + 0.25f - size / 2) * SCALER - OFFSET, (agent[i].position.second + 0.75f - size / 2) * SCALER - OFFSET, 0.0f);
+		}
+		else
+		{
+			ogl_drawSimpleSolidCircleXZ((agent[i].position.first - size / 2) * SCALER, 0.0f, (agent[i].position.second - size / 2) * SCALER, 5, 100);
 		}
 	}
 }
@@ -573,12 +578,17 @@ void CS_CELLULAR_AUTOMATA::draw_agent_willness(){
 		vector3 c = travelLength.getColor_Linear(agent[i].psychology.willness);
 		glColor3f(c.x, c.y, c.z);
 		//glColor4f(0.0f, 0.0f, 1.0f, agent[i].anxiety);
-		ogl_drawSimpleSolidCircleXZ((agent[i].position.first - size / 2) * SCALER, 0.0f, (agent[i].position.second - size / 2) * SCALER, 5, 100);
+		//ogl_drawSimpleSolidCircleXZ((agent[i].position.first - size / 2) * SCALER, 0.0f, (agent[i].position.second - size / 2) * SCALER, 5, 100);
 		if (agent[i].compressive_leader)
 		{
-			glLineWidth(1.5f);
-			glColor3f(0.69f, 0.17f, 1.0f);
-			ogl_drawSimpleCircleXZ((agent[i].position.first - size / 2) * SCALER, 0.0f, (agent[i].position.second - size / 2) * SCALER, 5, 100);
+			//glLineWidth(1.5f);
+			//glColor3f(0.69f, 0.17f, 1.0f);
+			//ogl_drawSimpleCircleXZ((agent[i].position.first - size / 2) * SCALER, 0.0f, (agent[i].position.second - size / 2) * SCALER, 5, 100);
+			ogl_drawFilledRectXZ((agent[i].position.first + 0.25f - size / 2) * SCALER - OFFSET, (agent[i].position.first + 0.75f - size / 2) * SCALER - OFFSET, (agent[i].position.second + 0.25f - size / 2) * SCALER - OFFSET, (agent[i].position.second + 0.75f - size / 2) * SCALER - OFFSET, 0.0f);
+		}
+		else
+		{
+			ogl_drawSimpleSolidCircleXZ((agent[i].position.first - size / 2) * SCALER, 0.0f, (agent[i].position.second - size / 2) * SCALER, 5, 100);
 		}
 	}
 }
@@ -623,7 +633,7 @@ void CS_CELLULAR_AUTOMATA::draw_currentExitBlockAgent(){
 			ogl_drawSimpleSolidCircleXZ((agent[i].position.first - size / 2) * SCALER, 0.0f, (agent[i].position.second - size / 2) * SCALER, 5, 100);
 		}
 	}
-	draw_agent_face_direction();
+	//draw_agent_face_direction();
 	// draw obstacles
 	draw_obstacle();
 }
