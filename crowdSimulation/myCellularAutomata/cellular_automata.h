@@ -47,6 +47,7 @@
 #define LOWER_INTERVAL 0.9f
 #define HIGHER_INTERVAL 0.99f
 #define OBSTACLE_UNIT 0.05f
+#define GUIDE_DIS 3
 
 using namespace std;
 
@@ -77,6 +78,10 @@ enum Direction{
 	_right,
 	_down,
 	_left,
+	_topRight,
+	_topLeft,
+	_downRight,
+	_downLeft,
 	local
 };
 
@@ -84,8 +89,6 @@ enum VisibleState{
 	person,
 	area
 };
-
-class CS_DIJKSTRA;
 
 class CellManager{
 public:
@@ -117,7 +120,7 @@ public:
 		exit_id = -1;
 		aFF = 0;
 		exit = false;
-		m_OccupantID.resize(4,-1);
+		m_OccupantID.resize(8,-1);
 		occupied_number = 0;
 	}
 	int x, y; //grid's position
@@ -135,7 +138,7 @@ public:
 	float max_sFF;
 	float aFF;
 	int occupied; //1: cell be occupied; 0: cell don't be occupied by pedestrian
-	int cell_type; //0: agent; 1: exit; 2: obstacle
+	int cell_type; //0: agent; 1: exit; 2: obstacle; 3:wall
 	int obstacle_; //0:obstacle
 	int occupant_id; //record which agent occupied the cell
 	int obstacle_id;
@@ -217,11 +220,14 @@ public:
 		mTendencyExperiment = 0;
 		mCommunication = 0;
 		mCommunicationProbability = 0.5f;
+		mNeighborType = 0;
+		mVolunteerPriority = 1;
 	}
 	float decay;
 	float diffusion;
 	float ks;
 	float kd;
+	float ka;
 	float ki;
 	float kw;
 	float meu;
@@ -236,6 +242,7 @@ public:
 	float travel_time_step;
 	float mFriction;
 	float mCommunicationProbability;
+	float mVolunteerPriority;
 	int size;
 	int agent_number;
 	int obstacle_size;
@@ -265,6 +272,7 @@ public:
 	int mTimeEffectExperiment;
 	int mTendencyExperiment;
 	int mCommunication;
+	int mNeighborType; // 0:von numan, 1:moore
 	bool mRecordVolunteerEvacuationTime;
 	bool start; //control when the simulation start
 	bool out;
@@ -498,6 +506,10 @@ public:
 		mVolunteered = false;
 		mTendency = 0.1f;
 		mBias = 0.1f;
+		mSawExit = false;
+		mGuider = false;
+		mBlockWay = false;
+		block_pos = PAIR_INT(-1, -1);
 	}
 	int agent_id;
 	int leader_id;
@@ -540,6 +552,9 @@ public:
 	bool bystander;
 	bool mStayInPlace;
 	bool mVolunteered;
+	bool mSawExit;
+	bool mGuider;
+	bool mBlockWay;
 	float leader_distance;
 	float guide_area_density;
 	float top, down, left, right;
@@ -560,6 +575,8 @@ public:
 	PAIR_INT position;
 	PAIR_INT escape_position;
 	PAIR_INT pre_pos;
+	PAIR_INT guide_pos;
+	PAIR_INT block_pos;
 	INERTIA inertia;
 	clock_t start_time;
 	clock_t escape_time;
@@ -572,6 +589,7 @@ public:
 	vector<float> anxiety_variation;
 	vector<float> remain_anxiety;
 	vector<int> mNeighboringAgent;
+	vector<bool> mAvoidObstacle;
 	STRESSOR stressor;
 	PSYCHOLOGY psychology;
 	PERSONALITY personality;
@@ -654,6 +672,10 @@ public:
 		right = false;
 		down = false;
 		left = false;
+		topRight = false;
+		topLeft = false;
+		downRight = false;
+		downLeft = false;
 		mHaveDes = false;
 		stuck_time = 0;
 		mWillThreshold = 0;
@@ -698,7 +720,7 @@ public:
 	//
 	//
 	int up_count, right_count, down_count, left_count;
-	bool up, right, down, left;
+	bool up, right, down, left, topRight, topLeft, downRight, downLeft;
 	bool ready;
 	int highest_x, highest_z, lowest_x, lowest_z;
 	//
@@ -718,6 +740,8 @@ public:
 	int stuck_time;
 	//
 	float mWillThreshold;
+	//
+	PAIR_INT mMoveDir;
 };
 
 class Exit{
@@ -731,6 +755,16 @@ public:
 	PAIR_INT direction;
 	int mEscapeTime;
 	bool active;
+};
+
+class Wall{
+public:
+	Wall(){
+		width = 1;
+	}
+	int width;
+	PAIR_INT position;
+	PAIR_INT direction;
 };
 
 class REMOVED_OBSTACLE{
@@ -860,6 +894,7 @@ public:
 	void update_agent_stress();
 	void update_leader_influence();
 	void update_volunteer_towardToObstacle_action();
+	void update_volunteer_position();
 	void update_blocked_obstacle_position();
 	void update_obstacle_position();
 	void update_agent_closeToObstalce();
@@ -890,6 +925,8 @@ public:
 	void draw_colorTable();
 	void draw_dFF_colorTable();
 	void draw_obstacle();
+	void draw_wall();
+	void draw_obstacle_destination();
 	void draw_guider();
 	void draw_agent_path();
 	void draw_clicked_agent();
@@ -976,6 +1013,7 @@ public:
 	void generateRandomAgentOrder();
 	void assignColorProportion();
 	void printDebugInformation();
+	void changeNeighborType();
 	string get_remain_agent();
 	string get_through_timeStep();
 	string get_through_time();
@@ -992,6 +1030,7 @@ protected:
 	void compute_staticFF();// static floor field
 	void compute_clean_sFF();
 	void compute_volunteer_staticFF(int, int); // o_id, com_id
+	void computeVolunteerSFFNotConsiderBlockPosition(int, int); // o_id, com_id
 	void compute_guide_influence(int);
 	void computeAgentLeadership();
 	void computeAgentPanic();
@@ -1032,6 +1071,7 @@ protected:
 	void check_volunteer_willness(int); //o_id
 	void check_volunteer_beside_obstacle();
 	void check_volunteer_position();
+	void check_guider_position();
 	void check_obstacle_arrive(int); //o_id
 	void update_agent_info();
 	void update_guider_density(int);
@@ -1048,7 +1088,11 @@ protected:
 	void update_ExitID_BlockedByObstacle();
 	void update_AgentPositionParallel();
 	void update_AgentPositionDisordered();
+	void update_VolunteerPositionParallel();
+	void update_VolunteerPositionDisordered();
 	void update_Cell_AgentWantOccpied();
+	void update_Guider_Position();
+	void update_guider_influence();
 	void find_nearestExit(int);
 	void obstacle_findNearestAgent();
 	void find_direction_towardToObstacleDestination(int,Direction&); //o_id
@@ -1097,10 +1141,15 @@ protected:
 	void regenerate_ExitID();
 	void regenerate_ObstacleID();
 	void constructAFF(int);
+	void constructRemovalObstacleDestinationAFF(int); //o_id
 	void findNeighboringAgent();
 	void push_observedVolunteer(int); //a_id
 	void findOptimalDestination(int); //o_id
 	void switchVolunteer(int, int, int); //o_id, com0_id, com1_id
+	void findGuidePosition(int, int); //o_id, a_id
+	void detectVolunteerPosition(int); //o_id
+	int findNearestObstacleComponentID(int, int); //o_id, a_id
+	int getVolunteerMapID(int, int); //o_id, com_id
 	float findNearestDistanceToExit(vector<PAIR_INT>);
 	float findNearestDistanceToExit(int); //o_id
 	float distanceToLeader(int, int, int); //x, y, agent_ID
@@ -1109,6 +1158,7 @@ protected:
 	float get_probability_volunteer(int, int, int);
 	float get_probability_obstacle(int, int, int);
 	float get_probability_volunteer(int, int, int, int, int); //x,z,agent_id,component_id,obstacle_id
+	float get_probability_guider(int, int, int); // id, x, z
 	float get_inertia(int, int, int);
 	float get_leader_inertia(int, int, int);
 	float get_position_stress(PAIR_INT, PAIR_INT);
@@ -1126,7 +1176,7 @@ protected:
 	float getWillInfluenceStrengthFromContactAgents(int); //a_id
 	float getLeaderEffect(int); //a_id
 	float getAverageLeaderNeuroticism(int); //a_id
-	float getTimeInfluence(float);
+	float getTimeInfluence(float, int);
 	float getGroupEffect(int); //a_id
 	float combinationFunction(int); //a_id
 	float willCombinationFunction(int); //a_id
@@ -1150,6 +1200,7 @@ protected:
 	bool opposite_direction_toDestination(int, float);
 	bool opposite_direction_toOb(int, float, int, int); //agent_id, distanceToOb, com_id, o_id
 	bool isValid(int, int); //true: valid cell; false: no valid
+	bool isGuiderValidArea(int, int, int); //o_id, x, z
 	bool isBlock(int, int); //true: exit be blocked
 	bool isBlock(int, int, int); //
 	bool isBesideWall(int, int);
@@ -1158,6 +1209,8 @@ protected:
 	bool isBelongSameObstacle(int, int, int);
 	bool isBeoccupied(int);
 	bool isExit(int, int);
+	bool isBlockTheWay(int, int); //o_id, com_id
+	bool isIllegalPosition(int, int, int); //o_id, x, z
 	PAIR_INT choose_direction(int, int, int); // choose the direction pedestrian want to go : up, down, left, right
 	PAIR_INT choose_direction_HighValueBased(int, int, int);
 	PAIR_INT choose_direction_HighValueBased_fourDirection(int, int, int);
@@ -1165,6 +1218,7 @@ protected:
 	PAIR_INT choose_direction_volunteer(int); //agent_id
 	PAIR_INT choose_direction_obstacle(int, int); //obstacle_id,component_id
 	PAIR_INT agent_avoid_obstacle(int); //a_id
+	PAIR_INT choose_direction_guider(int); //a_id
 	Direction obstalce_move_direction(int);
 private:
 	FFMODEL* model;
@@ -1183,6 +1237,7 @@ private:
 	vector<pair<int, int>> exits; // exit's position
 	vector<OBSTACLE> obstacles;
 	vector<Exit> mExit;
+	vector<Wall> mWall;
 	vector<REMOVED_OBSTACLE> removed_obstacles;
 	vector<CELL_BFS**> distance_map;
 	vector<vector<vector<CELL_BFS>>> distance_map_;
@@ -1208,8 +1263,10 @@ private:
 	vector<float> mColorProportion;
 	vector<int> mVolunteer;
 	vector<int> mObserverAgent;
+	vector<int> mGuiderID;
 	vector<vector<float>> mAverageAnxeityAroundObserveAgent;
 	vector<vector<float>> mObserveAgentAnxiety;
+	vector<vector<vector<float>>> mRemovalObstacleDestinationAFF;
 	queue<CELL_BFS> distance_queue;
 	//
 	ifstream file;

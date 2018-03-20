@@ -52,6 +52,10 @@ void CS_CELLULAR_AUTOMATA::read_data(){
 		{
 			file >> model->kd;
 		}
+		if (dataType == "KA")
+		{
+			file >> model->ka;
+		}
 		if (dataType == "KI")
 		{
 			file >> model->ki;
@@ -220,6 +224,10 @@ void CS_CELLULAR_AUTOMATA::read_data(){
 		if (dataType == "COMMUNICATION_PROB")
 		{
 			file >> model->mCommunicationProbability;
+		}
+		if (dataType == "VOLUNTEER_PRIORITY 1")
+		{
+			file >> model->mVolunteerPriority;
 		}
 		if (file.eof())
 			break;
@@ -1017,7 +1025,7 @@ void CS_CELLULAR_AUTOMATA::outputObstacleLocatedExperiment(){
 void CS_CELLULAR_AUTOMATA::outputTimeInfluenceStrength(){
 
 	outputFile.open("crowd_cellularAutomata/cellular_exponential_timeInfluence.txt", std::ios_base::app);
-	outputFile << getTimeInfluence(1) << endl;
+	//outputFile << getTimeInfluence(1) << endl;
 	//cout << getTimeInfluence(1) << endl;
 	outputFile.close();
 }
@@ -1032,7 +1040,7 @@ void CS_CELLULAR_AUTOMATA::outputTendencyInfluence(){
 void CS_CELLULAR_AUTOMATA::set_obstacle(){
 
 	//cout << "start read the data from cellular_obstacle..." << endl;
-	file.open("crowd_cellularAutomata/cellular_obstacle.txt");
+	file.open("crowd_cellularAutomata/cellular_scene.txt");
 
 	if (file.fail()){
 		cout << "CROWD_SIMULATION::cellular_obstacle. Cannot open data file." << endl;
@@ -1116,12 +1124,20 @@ void CS_CELLULAR_AUTOMATA::set_obstacle(){
 			o.volunteer_id = volunteer_id;
 			o.candidate_id = candidate_id;
 			o.mWillThreshold = (float)obstacle_component.size() * OBSTACLE_UNIT;
+			//o.mWillThreshold = 0;
 			obstacles.push_back(o);
-			//cout << minx << " " << maxx << " " << minz << " " << maxz << endl;
 		}
 	}
 	file.close();
-
+	mRemovalObstacleDestinationAFF.resize(obstacles.size());
+	for (unsigned int i = 0; i < obstacles.size(); i++)
+	{
+		mRemovalObstacleDestinationAFF[i].resize(model->size);
+		for (unsigned int j = 0; j < model->size; j++)
+		{
+			mRemovalObstacleDestinationAFF[i][j].resize(model->size, 0.0f);
+		}
+	}
 	/*cout << "start read the data from cellular_test_obstacle..." << endl;
 	file.open("crowd_cellularAutomata/cellular_test_obstacle.txt");
 
@@ -1211,13 +1227,50 @@ void CS_CELLULAR_AUTOMATA::set_obstacle(){
 
 void CS_CELLULAR_AUTOMATA::set_wall(){
 
+	file.open("crowd_cellularAutomata/cellular_scene.txt");
 	wall.clear();
+	while (true)
+	{
+		string s;
+		file >> s;
+		if (s == "WALL")
+		{
+			int minx, maxx, minz, maxz;
+			file >> minx >> maxx >> minz >> maxz;
+			for (int i = 0; i < model->size; i++)
+			{
+				for (int j = 0; j < model->size; j++)
+				{
+					if (i >= minx && i <= maxx && j >= minz && j <= maxz)
+					{
+						if (cell[i][j].obstacle)
+							continue;
+						wall.push_back(PAIR_INT(i, j));
+						cell[i][j].cell_type = 3;
+						cell[i][j].obstacle_ = 0;
+					}
+				}
+			}
+		}
+		if (file.eof())
+			break;
+	}
 	for (int i = -1; i < model->size + 1; i++)
 	{
 		for (int j = -1; j < model->size + 1; j++)
 		{
 			if (i == -1 || j == -1 || i == model->size || j == model->size)
+			{
 				wall.push_back(PAIR_INT(i, j));
+			}
+		}
+	}
+	for (auto &w : wall){
+		//cout << w.first << " " << w.second << endl;
+		if (isValid(w.first, w.second))
+		{
+			cell[w.first][w.second].obstacle_ = 0;
+			cell[w.first][w.second].cell_type = 3;
 		}
 	}
 }

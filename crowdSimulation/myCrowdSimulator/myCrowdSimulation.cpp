@@ -148,6 +148,9 @@ bool MY_CROWD_SIMULATOR::handleKeyEvent(unsigned char key)
 		case 'z':
 			flgHandled = true;
 			break;
+		case 'q':
+			mCelluarAutomata->changeNeighborType();
+			flgHandled = true;
 	}
 	return flgHandled;
 }

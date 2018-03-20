@@ -1,0 +1,22 @@
+TEXTURES
+
+BEGIN 0
+IMAGE	block.png	
+END
+
+BEGIN 1
+IMAGE	disk.png
+END
+
+
+BEGIN 2
+IMAGE	map.jpg
+END
+
+BEGIN 3
+IMAGE	map_white.jpg
+END
+
+BEGIN 4
+IMAGE	map_test_01.jpg
+END

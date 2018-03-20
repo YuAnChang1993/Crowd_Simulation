@@ -54,7 +54,7 @@ CROWD_SIMULATION_APP::CROWD_SIMULATION_APP( )
 	mFlgShow_Brave_Agent = false;
 	mFlgShow_Occupied_Cell = false;
 	mFlgShow_Volunteer_ColorTable = false;
-	mFlgShow_Agent_Anxiety = true;
+	mFlgShow_Agent_Anxiety = false;
 	mFlgShow_Agent_Willness = false;
 	mFlgShow_Obstalce_Density = false;
 	mFlgShow_ColorTable_WithoutExit = false;

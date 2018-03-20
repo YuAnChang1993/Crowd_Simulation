@@ -23,7 +23,7 @@ void MY_CROWD_SIMULATOR::update_State_Simulation(){
 		//mCelluarAutomata->find_obstacleMustMove(); //2017/10/23
 		//mCelluarAutomata->blocked_obstacle_findVolunteer(); //2017/10/23
 		mCelluarAutomata->update_blocked_obstacle_position();
-		mCelluarAutomata->update_volunteer_towardToObstacle_action(); //2017/09/22
+		mCelluarAutomata->update_volunteer_position(); //2017/09/22
 		//mCelluarAutomata->update_blocked_obstacle_position(); //2017/09/22
 		mCelluarAutomata->update_agent_position(); //2017/07/05
 		mCelluarAutomata->updateVisibleAgent(); //2017/11/06

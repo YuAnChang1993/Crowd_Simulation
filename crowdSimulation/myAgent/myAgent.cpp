@@ -31,30 +31,58 @@ void AGENT::draw_direction(int s){
 	switch (direction)
 	{
 	case _up:
-		ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z - size / 2) * SCALER - OFFSET);
+		//ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z - size / 2) * SCALER - OFFSET);
 		ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
 		dir = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 1 - size / 2) * SCALER - OFFSET);
 		left_line_midpoint = (dir + vector3((x - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET)) / 2;
 		right_line_midpoint = (dir + vector3((x + 1 - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET)) / 2;
 		break;
 	case _right:
-		ori = vector3((x - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
+		//ori = vector3((x - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
 		ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
 		dir = vector3((x + 1 - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
 		left_line_midpoint = (dir + vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 1 - size / 2) * SCALER - OFFSET)) / 2;
 		right_line_midpoint = (dir + vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z - size / 2) * SCALER - OFFSET)) / 2;
 		break;
 	case _down:
-		ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 1 - size / 2) * SCALER - OFFSET);
+		//ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 1 - size / 2) * SCALER - OFFSET);
 		ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
 		dir = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z - size / 2) * SCALER - OFFSET);
 		left_line_midpoint = (dir + vector3((x + 1 - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET)) / 2;
 		right_line_midpoint = (dir + vector3((x - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET)) / 2;
 		break;
 	case _left:
-		ori = vector3((x + 1 - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
+		//ori = vector3((x + 1 - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
 		ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
 		dir = vector3((x - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
+		left_line_midpoint = (dir + vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z - size / 2) * SCALER - OFFSET)) / 2;
+		right_line_midpoint = (dir + vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 1 - size / 2) * SCALER - OFFSET)) / 2;
+		break;
+	case _topRight:
+		//ori = vector3((x + 1 - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
+		ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
+		dir = vector3((x + 0.75f - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.75f - size / 2) * SCALER - OFFSET);
+		left_line_midpoint = (dir + vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z - size / 2) * SCALER - OFFSET)) / 2;
+		right_line_midpoint = (dir + vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 1 - size / 2) * SCALER - OFFSET)) / 2;
+		break;
+	case _topLeft:
+		//ori = vector3((x + 1 - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
+		ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
+		dir = vector3((x + 0.25f - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.75f - size / 2) * SCALER - OFFSET);
+		left_line_midpoint = (dir + vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z - size / 2) * SCALER - OFFSET)) / 2;
+		right_line_midpoint = (dir + vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 1 - size / 2) * SCALER - OFFSET)) / 2;
+		break;
+	case _downRight:
+		//ori = vector3((x + 1 - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
+		ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
+		dir = vector3((x + 0.75f - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.25f - size / 2) * SCALER - OFFSET);
+		left_line_midpoint = (dir + vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z - size / 2) * SCALER - OFFSET)) / 2;
+		right_line_midpoint = (dir + vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 1 - size / 2) * SCALER - OFFSET)) / 2;
+		break;
+	case _downLeft:
+		//ori = vector3((x + 1 - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
+		ori = vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.5f - size / 2) * SCALER - OFFSET);
+		dir = vector3((x + 0.25f - size / 2) * SCALER - OFFSET, -0.1f, (z + 0.25f - size / 2) * SCALER - OFFSET);
 		left_line_midpoint = (dir + vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z - size / 2) * SCALER - OFFSET)) / 2;
 		right_line_midpoint = (dir + vector3((x + 0.5f - size / 2) * SCALER - OFFSET, -0.1f, (z + 1 - size / 2) * SCALER - OFFSET)) / 2;
 		break;
@@ -143,6 +171,55 @@ void AGENT::insertAnxiety(float anx){
 	buffer.clear();
 }
 
+void CS_CELLULAR_AUTOMATA::findGuidePosition(int o_id, int a_id){
+
+	for (unsigned int i = 0; i < obstacles[o_id].moveDestination.size(); i++)
+	{
+		PAIR_INT pos = obstacles[o_id].moveDestination[i];
+		PAIR_INT guide_pos;
+		PAIR_INT obstacle_moveDir = obstacles[o_id].mMoveDir;
+		float min_dis = FLT_MAX;
+		for (int x = -GUIDE_DIS; x <= GUIDE_DIS; x++)
+		{
+			for (int z = -GUIDE_DIS; z <= GUIDE_DIS; z++)
+			{
+				if (!isValid(pos.first + x, pos.second + z))
+					continue;
+				if (!isGuiderValidArea(o_id, pos.first + x, pos.second + z))
+					continue;
+				if (x == 0 && z == 0)
+					continue;
+				if (findNearestDistanceToExit(o_id) > cell[pos.first + x][pos.second + z].sFF)
+					continue;
+				if (cell[pos.first + x][pos.second + z].sFF < min_dis)
+				{
+					min_dis = cell[pos.first + x][pos.second + z].sFF;
+					guide_pos = PAIR_INT(pos.first + x, pos.second + z);
+				}
+			}
+		}
+	}
+}
+
+int CS_CELLULAR_AUTOMATA::findNearestObstacleComponentID(int o_id, int a_id){
+
+	float min_dis = FLT_MAX;
+	int min_com = -1;
+	for (unsigned int i = 0; i < obstacles[o_id].component.size(); i++)
+	{
+		int id = obstacles[o_id].volunteer_id[i];
+		if (id != -1)
+			continue;
+		float dis = pair_int_distance(obstacles[o_id].component[i], agent[a_id].position);
+		if (dis < min_dis)
+		{
+			min_dis = dis;
+			min_com = i;
+		}
+	}
+	return min_com;
+}
+
 void CS_CELLULAR_AUTOMATA::decideBehavior(int id){
 
 	
@@ -150,11 +227,11 @@ void CS_CELLULAR_AUTOMATA::decideBehavior(int id){
 
 void CS_CELLULAR_AUTOMATA::decideToBeVolunteer(int id){
 
-	for (int i = 0; i < blocked_obstacles.size(); i++)
+	for (unsigned int i = 0; i < blocked_obstacles.size(); i++)
 	{
 		int o_id = blocked_obstacles[i];
 		obstacles[o_id].enough_volunteers = true;
-		for (int j = 0; j < obstacles[o_id].volunteer_id.size(); j++)
+		for (unsigned int j = 0; j < obstacles[o_id].volunteer_id.size(); j++)
 		{
 			if (obstacles[o_id].volunteer_id[j] == -1)
 			{
@@ -170,7 +247,7 @@ void CS_CELLULAR_AUTOMATA::decideToBeVolunteer(int id){
 	if (agent_psychology.obstacle_moveType == CS_OBSTACLE_MANUAL_MOVE)
 	{
 		bool flg = false;
-		for (int i = 0; i < blocked_obstacles.size(); i++)
+		for (unsigned int i = 0; i < blocked_obstacles.size(); i++)
 		{
 			if (o_id == blocked_obstacles[i])
 				flg = true;
@@ -178,7 +255,7 @@ void CS_CELLULAR_AUTOMATA::decideToBeVolunteer(int id){
 		if (!flg)
 			return;
 	}
-	for (int i = 0; i < obstacles[o_id].volunteer_id.size(); i++)
+	/*for (unsigned int i = 0; i < obstacles[o_id].volunteer_id.size(); i++)
 	{
 		int a_id = obstacles[o_id].volunteer_id[i];
 		if (a_id != -1)
@@ -189,8 +266,8 @@ void CS_CELLULAR_AUTOMATA::decideToBeVolunteer(int id){
 			min_dis = dis;
 			min_com = i;
 		}
-	}
-	//cout << min_com << endl;
+	}*/
+	min_com = findNearestObstacleComponentID(o_id, id);
 	float probability = (float)rand() / RAND_MAX;
 	//cout << "willness: " << agent[id].psychology.willness << endl;
 	//cout << obstacles[o_id].mWillThreshold << endl;
@@ -227,6 +304,30 @@ void CS_CELLULAR_AUTOMATA::decideToBeVolunteer(int id){
 		agent[id].volunteer = true;
 		agent[id].obstacle_component_id = min_com;
 		obstacles[o_id].volunteer_id[min_com] = id;
+		int gID = agent[id].group_id;
+		for (unsigned int i = 0; i < agent_group[gID].member.size(); i++)
+		{
+			int member_min_com = -1;
+			int a_id = agent_group[gID].member[i];
+			if (a_id == id)
+				continue;
+			member_min_com = findNearestObstacleComponentID(o_id, a_id);
+			if (member_min_com != -1)
+			{
+				agent[a_id].volunteer = true;
+				agent[a_id].obstacle_component_id = member_min_com;
+				obstacles[o_id].volunteer_id[member_min_com] = a_id;
+			}
+			else
+			{
+				if (agent[a_id].mGuider)
+					continue;
+				agent[a_id].mGuider = true;
+				agent[a_id].blocked_obstacle_id = o_id;
+				mGuiderID.push_back(a_id);
+				findGuidePosition(o_id, a_id);
+			}
+		}
 		/*bool repeat = false;
 		for (int i = 0; i < obstacles[o_id].candidate_id[min_com].size(); i++)
 		{
@@ -317,6 +418,7 @@ void CS_CELLULAR_AUTOMATA::reset_advanced_sFF(int a_id){
 
 void CS_CELLULAR_AUTOMATA::updateVisibleAgent(){
 
+	int count = 0;
 	for (int i = 0; i < model->agent_number; i++)
 	{
 		if (agent[i].arrival)
@@ -393,9 +495,9 @@ void CS_CELLULAR_AUTOMATA::updateVisibleAgent(){
 				float length = sqrt(x*x + z*z);
 				if (length > sqrt(pow(VISIBILITY_GRID_LENGTH, 2)))
 					continue;
+				// 當agent看到障礙物
 				if (cell[a_x + x][a_z + z].obstacle)
 				{
-					//cout << a_x + x << " " << a_z + z << endl;
 					int o_id = cell[a_x + x][a_z + z].obstacle_id;
 					/*if (obstacles[o_id].block_exit && !agent[i].bystander)
 					{
@@ -444,6 +546,7 @@ void CS_CELLULAR_AUTOMATA::updateVisibleAgent(){
 					}
 					}*/
 				}
+				// 當agent看到出口
 				if (cell[a_x + x][a_z + z].exit)
 				{
 					int e_id = cell[a_x + x][a_z + z].exit_id;
@@ -451,12 +554,17 @@ void CS_CELLULAR_AUTOMATA::updateVisibleAgent(){
 					int e_z = mExit[e_id].position.second;
 					int d_ex = mExit[e_id].direction.first;
 					int d_ez = mExit[e_id].direction.second;
+					// 檢查出口有無被obstacle擋住
 					for (unsigned int e = 0; e < mExit[e_id].width; e++)
 					{
+						count++;
 						int _x = e_x + d_ex*e;
 						int _z = e_z + d_ez*e;
 						if (!cell[_x][_z].obstacle)
+						{
 							agent[i].blockByExit[e_id] = 0;
+							agent[i].mSawExit = true;
+						}
 					}
 				}
 				agent[i].visible_area.push_back(PAIR_INT(a_x + x, a_z + z));
@@ -481,6 +589,7 @@ void CS_CELLULAR_AUTOMATA::updateVisibleAgent(){
 			}
 		}
 	}
+	//cout << count << endl;
 }
 
 void CS_CELLULAR_AUTOMATA::follow_behavior(int id){
@@ -609,17 +718,12 @@ void CS_CELLULAR_AUTOMATA::addsFF_resolveCounterFlow(int a_id){
 	//system("pause");
 }
 
-pair<int, int> CS_CELLULAR_AUTOMATA::choose_direction(int x, int y, int agent_number){
+PAIR_INT CS_CELLULAR_AUTOMATA::choose_direction(int x, int y, int agent_number){
 
-	//if (agent_number == 467)
-	//	system("pause");
 	PAIR_INT temp_pos = PAIR_INT(x, y);
-	double top = 0.0f, down = 0.0f, left = 0.0f, right = 0.0f, total;
-	/*if (agent[agent_number].close_obstalce)
-	{
-	temp_pos = agent_avoid_obstacle(agent_number);
-	return temp_pos;
-	}*/
+	double top = 0.0f, down = 0.0f, left = 0.0f, right = 0.0f, topRight = 0.0f, topLeft = 0.0f, downRight = 0.0f, downLeft = 0.0f, total;
+	int com_id = agent[agent_number].obstacle_component_id;
+	int o_id = agent[agent_number].blocked_obstacle_id;
 	// if agent is a guider
 	if (agent[agent_number].guider && !agent[agent_number].stop_guide)
 	{
@@ -638,7 +742,6 @@ pair<int, int> CS_CELLULAR_AUTOMATA::choose_direction(int x, int y, int agent_nu
 	// if agent has a leader	
 	if (!agent[agent_number].leader)
 	{
-		//cout << "inintitnint" << endl;
 		if (isValid(x, y + 1))
 			top = get_probability(x, y + 1, agent_number) * get_leader_inertia(x, y + 1, agent_number);
 		if (isValid(x, y - 1))
@@ -647,18 +750,51 @@ pair<int, int> CS_CELLULAR_AUTOMATA::choose_direction(int x, int y, int agent_nu
 			left = get_probability(x - 1, y, agent_number) * get_leader_inertia(x - 1, y, agent_number);
 		if (isValid(x + 1, y))
 			right = get_probability(x + 1, y, agent_number) * get_leader_inertia(x + 1, y, agent_number);
+		if (model->mNeighborType)
+		{
+			if (isValid(x + 1, y + 1))
+				topRight = get_probability(x + 1, y + 1, agent_number) * get_leader_inertia(x + 1, y + 1, agent_number);
+			if (isValid(x - 1, y + 1))
+				topLeft = get_probability(x - 1, y + 1, agent_number) * get_leader_inertia(x - 1, y + 1, agent_number);
+			if (isValid(x + 1, y - 1))
+				downRight = get_probability(x + 1, y - 1, agent_number) * get_leader_inertia(x + 1, y - 1, agent_number);
+			if (isValid(x - 1, y - 1))
+				downLeft = get_probability(x - 1, y - 1, agent_number) * get_leader_inertia(x - 1, y - 1, agent_number);
+		}
 	}
 	// if agent is a leader
 	if (agent[agent_number].leader)
 	{
 		if (isValid(x, y + 1))
-			top = get_probability(x, y + 1, agent_number) * get_inertia(x, y + 1, agent_number) * agent[agent_number].top;
+			top = get_probability(x, y + 1, agent_number) * get_inertia(x, y + 1, agent_number);// * agent[agent_number].top;
 		if (isValid(x, y - 1))
-			down = get_probability(x, y - 1, agent_number) * get_inertia(x, y - 1, agent_number) * agent[agent_number].down;
+			down = get_probability(x, y - 1, agent_number) * get_inertia(x, y - 1, agent_number);// * agent[agent_number].down;
 		if (isValid(x - 1, y))
-			left = get_probability(x - 1, y, agent_number) * get_inertia(x - 1, y, agent_number) * agent[agent_number].left;
+			left = get_probability(x - 1, y, agent_number) * get_inertia(x - 1, y, agent_number);// * agent[agent_number].left;
 		if (isValid(x + 1, y))
-			right = get_probability(x + 1, y, agent_number) * get_inertia(x + 1, y, agent_number) * agent[agent_number].right;
+			right = get_probability(x + 1, y, agent_number) * get_inertia(x + 1, y, agent_number);// * agent[agent_number].right;
+		if (model->mNeighborType)
+		{
+			if (isValid(x + 1, y + 1))
+				topRight = get_probability(x + 1, y + 1, agent_number) * get_inertia(x + 1, y + 1, agent_number);
+			if (isValid(x - 1, y + 1))
+				topLeft = get_probability(x - 1, y + 1, agent_number) * get_inertia(x - 1, y + 1, agent_number);
+			if (isValid(x + 1, y - 1))
+				downRight = get_probability(x + 1, y - 1, agent_number) * get_inertia(x + 1, y - 1, agent_number);
+			if (isValid(x - 1, y - 1))
+				downLeft = get_probability(x - 1, y - 1, agent_number) * get_inertia(x - 1, y - 1, agent_number);
+		}
+	}
+	if (agent[agent_number].volunteer)
+	{
+		top = get_probability_volunteer(x, y + 1, agent_number, com_id, o_id);
+		down = get_probability_volunteer(x, y - 1, agent_number, com_id, o_id);
+		left = get_probability_volunteer(x - 1, y, agent_number, com_id, o_id);
+		right = get_probability_volunteer(x + 1, y, agent_number, com_id, o_id);
+		topRight = get_probability_volunteer(x + 1, y + 1, agent_number, com_id, o_id);
+		topLeft = get_probability_volunteer(x - 1, y + 1, agent_number, com_id, o_id);
+		downRight = get_probability_volunteer(x + 1, y - 1, agent_number, com_id, o_id);
+		downLeft = get_probability_volunteer(x - 1, y - 1, agent_number, com_id, o_id);
 	}
 	//leader decide to wait for other members of not
 	/*if (determine_leader_waiting(agent[agent_number].leader, check_member_arrival(agent_number)))
@@ -679,12 +815,11 @@ pair<int, int> CS_CELLULAR_AUTOMATA::choose_direction(int x, int y, int agent_nu
 	}
 
 	// normalize each direction, their sum are equal to one	
-	total = top + down + left + right;
+	total = top + down + left + right + topRight + topLeft + downRight + downLeft;
 
 	// each side have been occupied, stay in place 	
 	if (total == 0)
 	{
-		//cout << top << " " << down << " " << left << " " << right << endl;
 		cell[x][y].temp_dFF += DYNAMIC_VALUE;
 		cell[x][y].occupant_id = agent_number;
 		agent[agent_number].direction = local;
@@ -695,9 +830,17 @@ pair<int, int> CS_CELLULAR_AUTOMATA::choose_direction(int x, int y, int agent_nu
 	down /= total;
 	left /= total;
 	right /= total;
+	topRight /= total;
+	topLeft /= total;
+	downRight /= total;
+	downLeft /= total;
 
 	down += top;
 	left += down;
+	right += left;
+	topRight += right;
+	topLeft += topRight;
+	downRight += topLeft;
 
 	float random_num = (double)rand() / RAND_MAX;
 	//choose four direction
@@ -728,16 +871,50 @@ pair<int, int> CS_CELLULAR_AUTOMATA::choose_direction(int x, int y, int agent_nu
 		agent[agent_number].inertia = fromRight;
 		agent[agent_number].direction = _left;
 	}
-	else if (random_num > left)
+	else if (random_num > left && (model->mNeighborType == 0 || (model->mNeighborType != 0 && random_num <= right)))
 	{
-		if (isValid(x, y)){
-			cell[x][y].occupied = 0;
-			cell[x][y].occupant_id = -1;
-			cell[x + 1][y].occupied = 1;
-			temp_pos = PAIR_INT(x + 1, y);
-			agent[agent_number].inertia = fromLeft;
-			agent[agent_number].direction = _right;
-		}
+		cell[x][y].occupied = 0;
+		cell[x][y].occupant_id = -1;
+		cell[x + 1][y].occupied = 1;
+		temp_pos = PAIR_INT(x + 1, y);
+		agent[agent_number].inertia = fromLeft;
+		agent[agent_number].direction = _right;
+	}
+	else if (random_num > right && random_num <= topRight)
+	{
+		cell[x][y].occupied = 0;
+		cell[x][y].occupant_id = -1;
+		cell[x + 1][y + 1].occupied = 1;
+		temp_pos = PAIR_INT(x + 1, y + 1);
+		agent[agent_number].inertia = fromLeftBottom;
+		agent[agent_number].direction = _topRight;
+	}
+	else if (random_num > topRight && random_num <= topLeft)
+	{
+		cell[x][y].occupied = 0;
+		cell[x][y].occupant_id = -1;
+		cell[x - 1][y + 1].occupied = 1;
+		temp_pos = PAIR_INT(x - 1, y + 1);
+		agent[agent_number].inertia = fromRightBottom;
+		agent[agent_number].direction = _topLeft;
+	}
+	else if (random_num > topLeft && random_num <= downRight)
+	{
+		cell[x][y].occupied = 0;
+		cell[x][y].occupant_id = -1;
+		cell[x + 1][y - 1].occupied = 1;
+		temp_pos = PAIR_INT(x + 1, y - 1);
+		agent[agent_number].inertia = fromLeftTop;
+		agent[agent_number].direction = _downRight;
+	}
+	else if (random_num > downRight)
+	{
+		cell[x][y].occupied = 0;
+		cell[x][y].occupant_id = -1;
+		cell[x - 1][y - 1].occupied = 1;
+		temp_pos = PAIR_INT(x - 1, y - 1);
+		agent[agent_number].inertia = fromRightTop;
+		agent[agent_number].direction = _downLeft;
 	}
 	agent[agent_number].waiting = false;
 	cell[x][y].temp_dFF += DYNAMIC_VALUE;
@@ -748,12 +925,11 @@ pair<int, int> CS_CELLULAR_AUTOMATA::choose_direction(int x, int y, int agent_nu
 	return temp_pos;
 }
 
-pair<int, int> CS_CELLULAR_AUTOMATA::choose_direction_HighValueBased(int x, int y, int agent_num){
+PAIR_INT CS_CELLULAR_AUTOMATA::choose_direction_HighValueBased(int x, int y, int agent_num){
 
-	float top = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX,
-		top_left = FLT_MAX, top_right = FLT_MAX, down_left = FLT_MAX, down_right = FLT_MAX;
+	float top = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX, top_left = FLT_MAX, top_right = FLT_MAX, down_left = FLT_MAX, down_right = FLT_MAX;
 	int com_id = agent[agent_num].obstacle_component_id;
-	int o_id = agent[agent_num].push_obstacle_id;
+	int o_id = agent[agent_num].blocked_obstacle_id;
 	if (isValid(x, y + 1))
 		top = get_probability_volunteer(x, y + 1, agent_num, com_id, o_id);
 	if (isValid(x, y - 1))
@@ -811,9 +987,8 @@ pair<int, int> CS_CELLULAR_AUTOMATA::choose_direction_HighValueBased(int x, int 
 
 PAIR_INT CS_CELLULAR_AUTOMATA::choose_direction_HighValueBased_fourDirection(int x, int y, int agent_num){
 
-	float top = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX;
+	float top = 0.0f, down = 0.0f, left = 0.0f, right = 0.0f, topRight = -0.0f, topLeft = 0.0f, downRight = 0.0f, downLeft = 0.0f;
 	int com_id = agent[agent_num].obstacle_component_id;
-	//cout << agent[agent_num].blocked_obstacle_id << " " << agent[agent_num].obstacle_component_id << endl;
 	int o_id = agent[agent_num].blocked_obstacle_id;
 	/*int o_id = agent[agent_num].blocked_obstacle_id;
 	if (isValid(x, y + 1) && cell[x][y + 1].occupied != 1 && !isObstacle(x, y + 1))
@@ -828,10 +1003,17 @@ PAIR_INT CS_CELLULAR_AUTOMATA::choose_direction_HighValueBased_fourDirection(int
 	down = get_probability_volunteer(x, y - 1, agent_num, com_id, o_id);
 	left = get_probability_volunteer(x - 1, y, agent_num, com_id, o_id);
 	right = get_probability_volunteer(x + 1, y, agent_num, com_id, o_id);
+	if (model->mNeighborType != 0)
+	{
+		topRight = get_probability_volunteer(x + 1, y + 1, agent_num, com_id, o_id);
+		topLeft = get_probability_volunteer(x - 1, y + 1, agent_num, com_id, o_id);
+		downRight = get_probability_volunteer(x + 1, y - 1, agent_num, com_id, o_id);
+		downLeft = get_probability_volunteer(x - 1, y - 1, agent_num, com_id, o_id);
+	}
 
 	double r = (double)rand() / RAND_MAX;
 	// normalize each direction, their sum are equal to one	
-	float total = top + down + left + right;
+	float total = top + down + left + right + topRight + topLeft + downRight + downLeft;
 
 	// each side have been occupied, stay in place 	
 	if (total == 0)
@@ -848,9 +1030,17 @@ PAIR_INT CS_CELLULAR_AUTOMATA::choose_direction_HighValueBased_fourDirection(int
 	down /= total;
 	left /= total;
 	right /= total;
+	topRight /= total;
+	topLeft /= total;
+	downRight /= total;
+	downLeft /= total;
 
 	down += top;
 	left += down;
+	right += left;
+	topRight += right;
+	topLeft += topRight;
+	downRight += topLeft;
 	PAIR_INT temp_pos;
 	float random_num = (double)rand() / RAND_MAX;
 	//choose four direction
@@ -881,16 +1071,50 @@ PAIR_INT CS_CELLULAR_AUTOMATA::choose_direction_HighValueBased_fourDirection(int
 		agent[agent_num].inertia = fromRight;
 		agent[agent_num].direction = _left;
 	}
-	else if (random_num > left)
+	else if (random_num > left && (model->mNeighborType == 0 || (model->mNeighborType != 0 && random_num <= right)))
 	{
-		if (isValid(x, y)){
-			cell[x][y].occupied = 0;
-			cell[x][y].occupant_id = -1;
-			cell[x + 1][y].occupied = 1;
-			temp_pos = PAIR_INT(x + 1, y);
-			agent[agent_num].inertia = fromLeft;
-			agent[agent_num].direction = _right;
-		}
+		cell[x][y].occupied = 0;
+		cell[x][y].occupant_id = -1;
+		cell[x + 1][y].occupied = 1;
+		temp_pos = PAIR_INT(x + 1, y);
+		agent[agent_num].inertia = fromLeft;
+		agent[agent_num].direction = _right;
+	}
+	else if (random_num > right && random_num <= topRight)
+	{
+		cell[x][y].occupied = 0;
+		cell[x][y].occupant_id = -1;
+		cell[x + 1][y + 1].occupied = 1;
+		temp_pos = PAIR_INT(x + 1, y + 1);
+		agent[agent_num].inertia = fromLeftBottom;
+		agent[agent_num].direction = _topRight;
+	}
+	else if (random_num > topRight && random_num <= topLeft)
+	{
+		cell[x][y].occupied = 0;
+		cell[x][y].occupant_id = -1;
+		cell[x - 1][y + 1].occupied = 1;
+		temp_pos = PAIR_INT(x - 1, y + 1);
+		agent[agent_num].inertia = fromRightBottom;
+		agent[agent_num].direction = _topLeft;
+	}
+	else if (random_num > topLeft && random_num <= downRight)
+	{
+		cell[x][y].occupied = 0;
+		cell[x][y].occupant_id = -1;
+		cell[x + 1][y - 1].occupied = 1;
+		temp_pos = PAIR_INT(x + 1, y - 1);
+		agent[agent_num].inertia = fromLeftTop;
+		agent[agent_num].direction = _downRight;
+	}
+	else if (random_num > downRight)
+	{
+		cell[x][y].occupied = 0;
+		cell[x][y].occupant_id = -1;
+		cell[x - 1][y - 1].occupied = 1;
+		temp_pos = PAIR_INT(x - 1, y - 1);
+		agent[agent_num].inertia = fromRightTop;
+		agent[agent_num].direction = _downLeft;
 	}
 	agent[agent_num].waiting = false;
 	cell[x][y].temp_dFF += DYNAMIC_VALUE;
@@ -901,23 +1125,12 @@ PAIR_INT CS_CELLULAR_AUTOMATA::choose_direction_HighValueBased_fourDirection(int
 		system("pause");
 	return temp_pos;
 
-	PAIR_INT direction[4] = { PAIR_INT(x, y + 1), PAIR_INT(x, y - 1), PAIR_INT(x - 1, y), PAIR_INT(x + 1, y) };
-	float buffer[4] = { top, down, left, right };
-	float distance[4] = { top, down, left, right };
-	/*for (int i = 0; i < 4; i++)
-	{
-		cout << distance[i] << " ";
-	}
-	cout << endl;*/
-	sort(distance, distance + 4);
-	/*for (int i = 0; i < 4; i++)
-	{
-		cout << distance[i] << " ";
-	}
-	cout << endl;
-	cout << "========================================" << endl;*/
-	int count = 3;
-	while (distance[count] == FLT_MAX)
+	PAIR_INT direction[8] = { PAIR_INT(x, y + 1), PAIR_INT(x, y - 1), PAIR_INT(x - 1, y), PAIR_INT(x + 1, y), PAIR_INT(x + 1, y + 1), PAIR_INT(x - 1, y + 1), PAIR_INT(x + 1, y - 1), PAIR_INT(x - 1, y - 1) };
+	float buffer[8] = { top, down, left, right, topRight, topLeft, downRight, downLeft };
+	float distance[8] = { top, down, left, right, topRight, topLeft, downRight, downLeft };
+	sort(distance, distance + 8);
+	int count = 7;
+	while (distance[count] == -FLT_MAX)
 	{
 		if (count == 0)
 		{
@@ -928,13 +1141,13 @@ PAIR_INT CS_CELLULAR_AUTOMATA::choose_direction_HighValueBased_fourDirection(int
 		}
 		count--;
 	}
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 8; i++)
 	{
-		if (distance[0] == buffer[i])
+		if (distance[7] == buffer[i])
 		{
 			if (!isValid(direction[i].first, direction[i].second))
 			{
-				cout << FLT_MAX << endl;
+				cout << -FLT_MAX << endl;
 				cout << buffer[i] << endl;
 				cout << i << endl;
 				agent[agent_num].direction = local;
@@ -958,6 +1171,211 @@ PAIR_INT CS_CELLULAR_AUTOMATA::choose_direction_HighValueBased_fourDirection(int
 			case 3:
 				agent[agent_num].direction = _right;
 				break;
+			case 4:
+				agent[agent_num].direction = _topRight;
+				break;
+			case 5:
+				agent[agent_num].direction = _topLeft;
+				break;
+			case 6:
+				agent[agent_num].direction = _downRight;
+				break;
+			case 7:
+				agent[agent_num].direction = _downLeft;
+				break;
+			}
+			return direction[i];
+		}
+	}
+
+	return PAIR_INT(0, 0);
+}
+
+PAIR_INT CS_CELLULAR_AUTOMATA::choose_direction_guider(int id){
+
+	float top = -FLT_MAX, down = -FLT_MAX, left = -FLT_MAX, right = -FLT_MAX, topRight = -FLT_MAX, topLeft = -FLT_MAX, downRight = -FLT_MAX, downLeft = -FLT_MAX;
+	int x = agent[id].position.first;
+	int z = agent[id].position.second;
+	top = get_probability_guider(id, x, z + 1);
+	down = get_probability_guider(id, x, z - 1);
+	left = get_probability_guider(id, x - 1, z);
+	right = get_probability_guider(id, x + 1, z);
+	topRight = get_probability_guider(id, x + 1, z + 1);
+	topLeft = get_probability_guider(id, x - 1, z + 1);
+	downRight = get_probability_guider(id, x + 1, z - 1);
+	downLeft = get_probability_guider(id, x - 1, z - 1);
+
+	double r = (double)rand() / RAND_MAX;
+	// normalize each direction, their sum are equal to one	
+	float total = top + down + left + right + topRight + topLeft + downRight + downLeft;
+
+	// each side have been occupied, stay in place 	
+	if (total == 0)
+	{
+		cell[x][z].temp_dFF += DYNAMIC_VALUE;
+		cell[x][z].occupant_id = id;
+		cell[x][z].occupied = 1;
+		agent[id].direction = local;
+		agent[id].pre_sFF = cell[x][z].sFF;
+		return PAIR_INT(x, z);
+	}
+	top /= total;
+	down /= total;
+	left /= total;
+	right /= total;
+	topRight /= total;
+	topLeft /= total;
+	downRight /= total;
+	downLeft /= total;
+
+	down += top;
+	left += down;
+	right += left;
+	topRight += right;
+	topLeft += topRight;
+	downRight += topLeft;
+	PAIR_INT temp_pos;
+	float random_num = (double)rand() / RAND_MAX;
+	//choose four direction
+	if (random_num <= top)
+	{
+		cell[x][z].occupied = 0;
+		cell[x][z].occupant_id = -1;
+		cell[x][z + 1].occupied = 1;
+		temp_pos = PAIR_INT(x, z + 1);
+		agent[id].inertia = fromBottom;
+		agent[id].direction = _up;
+	}
+	else if (random_num > top && random_num <= down)
+	{
+		cell[x][z].occupied = 0;
+		cell[x][z].occupant_id = -1;
+		cell[x][z - 1].occupied = 1;
+		temp_pos = PAIR_INT(x, z - 1);
+		agent[id].inertia = fromTop;
+		agent[id].direction = _down;
+	}
+	else if (random_num > down && random_num <= left)
+	{
+		cell[x][z].occupied = 0;
+		cell[x][z].occupant_id = -1;
+		cell[x - 1][z].occupied = 1;
+		temp_pos = PAIR_INT(x - 1, z);
+		agent[id].inertia = fromRight;
+		agent[id].direction = _left;
+	}
+	else if (random_num > left && isValid(x + 1, z) && (model->mNeighborType == 0 || (model->mNeighborType != 0 && random_num <= right)))
+	{
+		cell[x][z].occupied = 0;
+		cell[x][z].occupant_id = -1;
+		cell[x + 1][z].occupied = 1;
+		temp_pos = PAIR_INT(x + 1, z);
+		agent[id].inertia = fromLeft;
+		agent[id].direction = _right;
+	}
+	else if (random_num > right && random_num <= topRight)
+	{
+		cell[x][z].occupied = 0;
+		cell[x][z].occupant_id = -1;
+		cell[x + 1][z + 1].occupied = 1;
+		temp_pos = PAIR_INT(x + 1, z + 1);
+		agent[id].inertia = fromLeftBottom;
+		agent[id].direction = _topRight;
+	}
+	else if (random_num > topRight && random_num <= topLeft)
+	{
+		cell[x][z].occupied = 0;
+		cell[x][z].occupant_id = -1;
+		cell[x - 1][z + 1].occupied = 1;
+		temp_pos = PAIR_INT(x - 1, z + 1);
+		agent[id].inertia = fromRightBottom;
+		agent[id].direction = _topLeft;
+	}
+	else if (random_num > topLeft && random_num <= downRight)
+	{
+		cell[x][z].occupied = 0;
+		cell[x][z].occupant_id = -1;
+		cell[x + 1][z - 1].occupied = 1;
+		temp_pos = PAIR_INT(x + 1, z - 1);
+		agent[id].inertia = fromLeftTop;
+		agent[id].direction = _downRight;
+	}
+	else if (random_num > downRight)
+	{
+		cell[x][z].occupied = 0;
+		cell[x][z].occupant_id = -1;
+		cell[x - 1][z - 1].occupied = 1;
+		temp_pos = PAIR_INT(x - 1, z - 1);
+		agent[id].inertia = fromRightTop;
+		agent[id].direction = _downLeft;
+	}
+	agent[id].waiting = false;
+	cell[x][z].temp_dFF += DYNAMIC_VALUE;
+	cell[temp_pos.first][temp_pos.second].occupant_id = id;
+	agent[id].pre_sFF = cell[x][z].sFF;
+	agent[id].pre_pos = PAIR_INT(x, z);
+	if (temp_pos.first == -1 || temp_pos.second == -1)
+		system("pause");
+	return temp_pos;
+
+	PAIR_INT direction[8] = { PAIR_INT(x, z + 1), PAIR_INT(x, z - 1), PAIR_INT(x - 1, z), PAIR_INT(x + 1, z), PAIR_INT(x + 1, z + 1), PAIR_INT(x - 1, z + 1), PAIR_INT(x + 1, z - 1), PAIR_INT(x - 1, z - 1) };
+	float buffer[8] = { top, down, left, right, topRight, topLeft, downRight, downLeft };
+	float distance[8] = { top, down, left, right, topRight, topLeft, downRight, downLeft };
+	sort(distance, distance + 8);
+	int count = 7;
+	while (distance[count] == FLT_MAX)
+	{
+		if (count == 0)
+		{
+			cout << "volunteer stay at ori place. " << x << " " << z << endl;
+			cell[x][z].temp_dFF += DYNAMIC_VALUE;
+			agent[id].direction = local;
+			return PAIR_INT(x, z);
+		}
+		count--;
+	}
+	for (int i = 0; i < 8; i++)
+	{
+		if (distance[7] == buffer[i])
+		{
+			if (!isValid(direction[i].first, direction[i].second))
+			{
+				cout << FLT_MAX << endl;
+				cout << buffer[i] << endl;
+				cout << i << endl;
+				agent[id].direction = local;
+				return PAIR_INT(x, z);
+			}
+			cell[x][z].occupied = 0;
+			cell[x][z].temp_dFF += DYNAMIC_VALUE;
+			cell[direction[i].first][direction[i].second].occupied = 1;
+			cell[direction[i].first][direction[i].second].occupant_id = id;
+			switch (i)
+			{
+			case 0:
+				agent[id].direction = _up;
+				break;
+			case 1:
+				agent[id].direction = _down;
+				break;
+			case 2:
+				agent[id].direction = _left;
+				break;
+			case 3:
+				agent[id].direction = _right;
+				break;
+			case 4:
+				agent[id].direction = _topRight;
+				break;
+			case 5:
+				agent[id].direction = _topLeft;
+				break;
+			case 6:
+				agent[id].direction = _downRight;
+				break;
+			case 7:
+				agent[id].direction = _downLeft;
+				break;
 			}
 			return direction[i];
 		}
@@ -966,7 +1384,7 @@ PAIR_INT CS_CELLULAR_AUTOMATA::choose_direction_HighValueBased_fourDirection(int
 	return PAIR_INT(0, 0);
 }
 // volunteer choose the closer route to destination
-pair<int, int> CS_CELLULAR_AUTOMATA::choose_direction_volunteer(int x, int z, int agent_num){
+PAIR_INT CS_CELLULAR_AUTOMATA::choose_direction_volunteer(int x, int z, int agent_num){
 
 	pair<int, int> temp_pos = pair<int, int>(x, z);
 	float top = 0.0f, down = 0.0f, left = 0.0f, right = 0.0f, total;
@@ -1138,7 +1556,7 @@ pair<int, int> CS_CELLULAR_AUTOMATA::choose_direction_volunteer(int x, int z, in
 	return temp_pos;
 }
 // volunteer choose the closer route to target
-pair<int, int> CS_CELLULAR_AUTOMATA::choose_direction_volunteer(int agent_id){
+PAIR_INT CS_CELLULAR_AUTOMATA::choose_direction_volunteer(int agent_id){
 	int x = agent[agent_id].position.first;
 	int z = agent[agent_id].position.second;
 	pair<int, int> temp_pos = pair<int, int>(x, z);
@@ -1222,7 +1640,7 @@ pair<int, int> CS_CELLULAR_AUTOMATA::choose_direction_volunteer(int agent_id){
 	return temp_pos;
 }
 // obstacle choose the closer route to destination
-pair<int, int> CS_CELLULAR_AUTOMATA::choose_direction_obstacle(int o_id, int com_id){
+PAIR_INT CS_CELLULAR_AUTOMATA::choose_direction_obstacle(int o_id, int com_id){
 
 
 }
@@ -1282,7 +1700,10 @@ float CS_CELLULAR_AUTOMATA::combinationFunction(int id){
 	float influenceStrength = getInfluenceStrengthFromContactAgents(id);
 	float anxiety = agent[id].anxiety;
 	float tendency = agent[id].mPersonality.neuroticism;
-	//tendency = tendency + getContagionStrengthFromContactLeader(id) * (getLeaderEffect(id) - agent[id].mPersonality.neuroticism);
+	tendency = tendency + getContagionStrengthFromContactLeader(id) * (getLeaderEffect(id) - agent[id].mPersonality.neuroticism);
+	if (tendency < 0.1f)
+		tendency = 0.1f;
+	agent[id].mPersonality.neuroticism = tendency;
 	float t = getContagionStrengthFromContactLeader(id) * (getLeaderEffect(id) - agent[id].mPersonality.neuroticism);
 	//tendency = getAverageLeaderNeuroticism(id);
 	//if (t != 0)
@@ -1295,7 +1716,7 @@ float CS_CELLULAR_AUTOMATA::combinationFunction(int id){
 	//tendency = agent_psychology.tendency;
 	float bias = agent[id].mBias;
 	bias = agent_psychology.bias;
-	bias = getTimeInfluence(tendency);
+	bias = getTimeInfluence(tendency, id);
 	//bias = 0.0f;
 	return tendency * (bias * (1 - (1 - influenceStrength) * (1 - anxiety)) + (1 - bias) * influenceStrength * anxiety) + (1 - tendency) * influenceStrength;
 	//return (1 - tendency) * (bias * (1 - (1 - influenceStrength) * (1 - anxiety)) + (1 - bias) * influenceStrength * anxiety) + tendency * influenceStrength;
@@ -1328,7 +1749,7 @@ float CS_CELLULAR_AUTOMATA::willCombinationFunction(int id){
 	//tendency = getAverageLeaderNeuroticism(id);
 	float bias = agent[id].mBias;
 	bias = agent_psychology.bias;
-	bias = getTimeInfluence(tendency);
+	bias = getTimeInfluence(tendency, id);
 	return tendency * (bias * (1 - (1 - influenceStrength) * (1 - will)) + (1 - bias) * influenceStrength * will) + (1 - tendency) * influenceStrength;
 }
 
@@ -1417,8 +1838,10 @@ float CS_CELLULAR_AUTOMATA::getGroupEffect(int id){
 	return overallEffect;
 }
 
-float CS_CELLULAR_AUTOMATA::getTimeInfluence(float neuroticism){
+float CS_CELLULAR_AUTOMATA::getTimeInfluence(float neuroticism, int id){
 
+	//if (agent[id].compressive_leader)
+	//	return 1 - exp((double)-mTimeCounter / (agent_psychology.timeEffect + 100));
 	return 1 - exp((double)-mTimeCounter / agent_psychology.timeEffect);
 	return 1 - exp((double)-mTimeCounter / (agent_psychology.timeEffect * (1 - neuroticism)));
 }

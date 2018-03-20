@@ -50,7 +50,7 @@ namespace
 	int flgShowBraveAgent = false;//2017/09/18
 	int flgShowOccupiedCell = false;//2017/09/28
 	int flgShowVolunteerColorTable = false;//2017/09/29
-	int flgShowAgentAnxiety = true;//2017/10/18
+	int flgShowAgentAnxiety = false;//2017/10/18
 	int flgShowAgentWillness = false;//2017/10/19
 	int flgShowObstacleDensity = false;//2017/10/25
 	int flgShowColorTableWithoutExit = false;//2017/11/13
@@ -145,7 +145,7 @@ namespace
 		flgShowNeutralAgent = checkbox_showItem_neutral_agent->get_int_val();
 		flgShowBraveAgent = checkbox_showItem_brave_agent->get_int_val();*/
 		flgShowOccupiedCell = checkbox_showItem_occupied_cell->get_int_val();
-		//flgShowVolunteerColorTable = checkbox_showItem_volunteer_colorTable->get_int_val();
+		flgShowVolunteerColorTable = checkbox_showItem_volunteer_colorTable->get_int_val();
 		flgShowAgentAnxiety = checkbox_showItem_anxiety->get_int_val();
 		flgShowAgentWillness = checkbox_showItem_willness->get_int_val();
 		flgShowObstacleDensity = checkbox_showItem_density->get_int_val();
@@ -449,10 +449,11 @@ void CROWD_SIMULATION_APP::createGLUI( int mainWinID, void (global_idle_func()) 
 	checkbox_showItem_neutral_agent = new GLUI_Checkbox(glui, "Neutral Agent", &flgShowNeutralAgent, 17, control_show_items); //2017/09/18
 	checkbox_showItem_brave_agent = new GLUI_Checkbox(glui, "Brave Agent", &flgShowBraveAgent, 18, control_show_items); //2017/09/18
 	new GLUI_Button(glui, "edit obstacle", EDIT_OBSTACLE, control_edit_obstacle); //2017/09/11
+	*/
 	checkbox_showItem_volunteer_colorTable = new GLUI_Checkbox(glui, "volunteer colorTable", &flgShowVolunteerColorTable, 20, control_show_items); //2017/09/29
 	spinner_volunteer_colorTable = new GLUI_Spinner(glui, "colorTable ID", GLUI_SPINNER_INT, &colorTable_id, 0, control_colorTable_ID); //2017/09/29
 	new GLUI_Button(glui, "set table ID", SET_TABLE_ID, control_set_colorTable_ID); //2017/09/29
-	*/
+	
 	new GLUI_Separator(glui);
 	checkbox_showItem_colorTableWithoutExit = new GLUI_Checkbox(glui, "colorTable without exit", &flgShowColorTableWithoutExit, 21, control_show_items); //2017/11/13
 	spinner_colorTable_withoutExit = new GLUI_Spinner(glui, "colorTable without exit ID", GLUI_SPINNER_INT, &colorTable_withoutExit_id, 0, control_colorTable_withoutExit_ID); //2017/11/13

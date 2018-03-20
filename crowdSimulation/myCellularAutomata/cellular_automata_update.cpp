@@ -10,7 +10,7 @@ void CS_CELLULAR_AUTOMATA::update_dynamicFF(){
 	{
 		for (int j = 0; j < model->size; j++)
 		{
-			float top = 0.0f, down = 0.0f, left = 0.0f, right = 0.0f;
+			float top = 0.0f, down = 0.0f, left = 0.0f, right = 0.0f, topRight = 0.0f, topLeft = 0.0f, downRight = 0.0f, downLeft = 0.0f;
 			if (isValid(i, j + 1))
 				top = cell[i][j + 1].temp_dFF;
 			if (isValid(i, j - 1))
@@ -19,7 +19,18 @@ void CS_CELLULAR_AUTOMATA::update_dynamicFF(){
 				left = cell[i - 1][j].temp_dFF;
 			if (isValid(i + 1, j))
 				right = cell[i + 1][j].temp_dFF;
-			cell[i][j].dFF = (1 - model->diffusion) * (1 - model->decay) * cell[i][j].temp_dFF + (model->diffusion * ((1 - model->decay) / 4)) * (top + down + left + right);
+			if (isValid(i + 1, j + 1))
+				topRight = cell[i + 1][j + 1].temp_dFF;
+			if (isValid(i - 1, j + 1))
+				topLeft = cell[i - 1][j + 1].temp_dFF;
+			if (isValid(i + 1, j - 1))
+				downRight = cell[i + 1][j - 1].temp_dFF;
+			if (isValid(i - 1, j - 1))
+				downLeft = cell[i - 1][j - 1].temp_dFF;
+			if (model->mNeighborType == 0)
+				cell[i][j].dFF = (1 - model->diffusion) * (1 - model->decay) * cell[i][j].temp_dFF + (model->diffusion * ((1 - model->decay) / 4)) * (top + down + left + right);
+			if (model->mNeighborType != 0)
+				cell[i][j].dFF = (1 - model->diffusion) * (1 - model->decay) * cell[i][j].temp_dFF + (model->diffusion * ((1 - model->decay) / 8)) * (top + down + left + right + topRight + topLeft + downRight + downLeft);
 		}
 	}
 	// scale the dynamic floor field value to 0~13
@@ -90,6 +101,7 @@ void CS_CELLULAR_AUTOMATA::update_distanceToLeader(){
 
 void CS_CELLULAR_AUTOMATA::update_agent_position(){
 
+	update_Guider_Position();
 	//check_task_finish();
 	check_arrival();
 	reset_addition_force();
@@ -189,32 +201,29 @@ void CS_CELLULAR_AUTOMATA::update_AgentPositionParallel(){
 
 	reset_AgentStayInPlaceFlg();
 	reset_OccupiedAgentID();
+	update_VolunteerPositionDisordered();
 	update_Cell_AgentWantOccpied();
 	for (int i = 0; i < model->size; i++)
 	{
 		for (int j = 0; j < model->size; j++)
 		{
 			bool s = true;
-			for (int k = 0; k < 4; k++)
+			if (cell[i][j].m_OccupantID.size() > 8)
+				system("pause");
+			for (int k = 0; k < 8; k++)
 			{
 				if (cell[i][j].m_OccupantID[k] != -1)
 				{
 					s = false;
 					break;
 				}
-				//cout << cell[i][j].m_OccupantID[k] << " ";
 			}
-			//cout << endl;
 			if (s && cell[i][j].occupied_number >= 1)
 			{
-				//cout << i << " " << j << endl;
-				for (int k = 0; k < 4; k++)
+				for (int k = 0; k < 8; k++)
 				{
-					//cout << cell[i][j].m_OccupantID[k] << " ";
 				}
-				//cout << endl;
 				cell[i][j].occupied_number = 0;
-				//cout << cell[i][j].occupied_number << endl;
 			}
 		}
 	}
@@ -222,15 +231,14 @@ void CS_CELLULAR_AUTOMATA::update_AgentPositionParallel(){
 	{
 		for (int j = 0; j < model->size; j++)
 		{
-			//if (cell[i][j].m_OccupantID.size() == 0)
-			//	continue;
 			if (cell[i][j].occupied_number == 0)
 				continue;
-			if (cell[i][j].occupied_number > 4)
-			{
-				//cout << "ff" << endl;
-				//system("pause");
-			}
+			//cout << cc << endl;
+			//cout << cell[i][j].occupied_number << endl;
+			//cout << cell[i][j].occupied_number << endl;
+			//if (cell[i][j].occupied_number > 8)
+			//{
+			//}
 			double p = (double)rand() / RAND_MAX;
 			int id, x, z;
 			// if the cell has more than one pedestrian want to occupy 
@@ -238,7 +246,7 @@ void CS_CELLULAR_AUTOMATA::update_AgentPositionParallel(){
 			{
 				cell[i][j].occupant_id = -1;
 				cell[i][j].occupied = 0;
-				for (int k = 0; k < (int)cell[i][j].m_OccupantID.size(); k++)
+				for (unsigned int k = 0; k < cell[i][j].m_OccupantID.size(); k++)
 				{
 					id = cell[i][j].m_OccupantID[k];
 					if (id == -1)
@@ -256,8 +264,22 @@ void CS_CELLULAR_AUTOMATA::update_AgentPositionParallel(){
 			}
 			// random choose a agent to occupy the cell
 			int index = rand() % cell[i][j].occupied_number;
-			//int index = rand() % cell[i][j].m_OccupantID.size();
+			vector<int> volunteerID;
+			for (unsigned int k = 0; k < cell[i][j].m_OccupantID.size(); k++)
+			{
+				int vID = cell[i][j].m_OccupantID[k];
+				if (vID == -1)
+					continue;
+				if (agent[vID].volunteer)
+					volunteerID.push_back(vID);
+			}
 			id = cell[i][j].m_OccupantID[index];
+			// 禮讓volunteer
+			if (!volunteerID.empty())
+			{
+				index = rand() % volunteerID.size();
+				id = volunteerID[index];
+			}
 			x = agent[id].position.first;
 			z = agent[id].position.second;
 			agent[id].position = PAIR_INT(i, j);
@@ -290,22 +312,71 @@ void CS_CELLULAR_AUTOMATA::update_AgentPositionParallel(){
 				agent[id].direction = _down;
 				agent[id].inertia = fromTop;
 			}
-			for (int k = 0; k < (int)cell[i][j].m_OccupantID.size(); k++)
+			else if (i > x && j > z) //topRight
 			{
-				if (k == index)
+				agent[id].direction = _topRight;
+				agent[id].inertia = fromLeftBottom;
+			}
+			else if (i < x && j > z) //topLeft
+			{
+				agent[id].direction = _topLeft;
+				agent[id].inertia = fromRightBottom;
+			}
+			else if (i > x && j < z) //downRight
+			{
+				agent[id].direction = _downRight;
+				agent[id].inertia = fromLeftTop;
+			}
+			else if (i < x && j < z) //downLeft
+			{
+				agent[id].direction = _downLeft;
+				agent[id].inertia = fromRightTop;
+			}
+			for (unsigned int k = 0; k < cell[i][j].m_OccupantID.size(); k++)
+			{
+				int a_id = cell[i][j].m_OccupantID[k];
+				if (id == a_id)
 					continue;
-				id = cell[i][j].m_OccupantID[k];
-				if (id == -1)
+				if (a_id == -1)
 					continue;
-				x = agent[id].position.first;
-				z = agent[id].position.second;
-				agent[id].position = PAIR_INT(x, z);
-				agent[id].direction = local;
-				agent[id].pre_sFF = cell[x][z].sFF;
-				cell[x][z].occupant_id = id;
+				x = agent[a_id].position.first;
+				z = agent[a_id].position.second;
+				agent[a_id].position = PAIR_INT(x, z);
+				agent[a_id].direction = local;
+				agent[a_id].pre_sFF = cell[x][z].sFF;
+				cell[x][z].occupant_id = a_id;
 				cell[x][z].occupied = 1;
 				cell[x][z].temp_dFF += DYNAMIC_VALUE;
 			}
+		}
+	}
+}
+
+void CS_CELLULAR_AUTOMATA::update_Guider_Position(){
+
+	check_guider_position();
+	for (unsigned int i = 0; i < mGuiderID.size(); i++)
+	{
+		int id = mGuiderID[i];
+		if (agent[id].position.first == agent[id].guide_pos.first && agent[id].position.second == agent[id].guide_pos.second)
+			continue;
+		int o_id = agent[id].blocked_obstacle_id;
+		agent[id].position = choose_direction_guider(id);
+		//obstacles[o_id].moveDestination
+	}
+	update_guider_influence();
+}
+
+void CS_CELLULAR_AUTOMATA::update_guider_influence(){
+
+	for (unsigned int i = 0; i < mGuiderID.size(); i++)
+	{
+		int id = mGuiderID[i];
+		int o_id = agent[id].blocked_obstacle_id;
+		for (unsigned int j = 0; j < agent[id].visible_agentID.size(); j++)
+		{
+			int a_id = agent[id].visible_agentID[j];
+			agent[a_id].mAvoidObstacle[o_id] = true;
 		}
 	}
 }
@@ -325,12 +396,15 @@ void CS_CELLULAR_AUTOMATA::update_Cell_AgentWantOccpied(){
 			continue;
 		if (agent[i].arrival)
 			continue;
-		double top = 0.0f, down = 0.0f, left = 0.0f, right = 0.0f, total;
+		if (agent[i].mGuider)
+			continue;
+		double top = 0.0f, down = 0.0f, left = 0.0f, right = 0.0f, topRight = 0.0f, topLeft = 0.0f, downRight = 0.0f, downLeft = 0.0f, total;
+		int com_id = agent[i].obstacle_component_id;
+		int o_id = agent[i].blocked_obstacle_id;
 		int x = agent[i].position.first;
 		int z = agent[i].position.second;
 		if (!agent[i].leader)
 		{
-			//cout << "inintitnint" << endl;
 			if (isValid(x, z + 1))
 				top = get_probability(x, z + 1, i) * get_leader_inertia(x, z + 1, i);
 			if (isValid(x, z - 1))
@@ -339,6 +413,17 @@ void CS_CELLULAR_AUTOMATA::update_Cell_AgentWantOccpied(){
 				left = get_probability(x - 1, z, i) * get_leader_inertia(x - 1, z, i);
 			if (isValid(x + 1, z))
 				right = get_probability(x + 1, z, i) * get_leader_inertia(x + 1, z, i);
+			if (model->mNeighborType)
+			{
+				if (isValid(x + 1, z + 1))
+					topRight = get_probability(x + 1, z + 1, i) * get_leader_inertia(x + 1, z + 1, i);
+				if (isValid(x - 1, z + 1))
+					topLeft = get_probability(x - 1, z + 1, i) * get_leader_inertia(x - 1, z + 1, i);
+				if (isValid(x + 1, z - 1))
+					downRight = get_probability(x + 1, z - 1, i) * get_leader_inertia(x + 1, z - 1, i);
+				if (isValid(x - 1, z - 1))
+					downLeft = get_probability(x - 1, z - 1, i) * get_leader_inertia(x - 1, z - 1, i);
+			}
 		}
 		// if agent is a leader
 		if (agent[i].leader)
@@ -351,16 +436,30 @@ void CS_CELLULAR_AUTOMATA::update_Cell_AgentWantOccpied(){
 				left = get_probability(x - 1, z, i) * get_inertia(x - 1, z, i); //* agent[i].left;
 			if (isValid(x + 1, z))
 				right = get_probability(x + 1, z, i) * get_inertia(x + 1, z, i); //* agent[i].right;
-			if (model->remain_agent == 1)
+			if (model->mNeighborType)
 			{
-				//cout << top << " " << cell[x][z + 1].dFF << " " << cell[x][z + 1].sFF << endl;
-				//cout << down << " " << cell[x][z - 1].dFF << " " << cell[x][z - 1].sFF << endl;
-				//cout << left << " " << cell[x - 1][z].dFF << " " << cell[x - 1][z].sFF << endl;
-				//cout << right << " " << cell[x + 1][z].dFF << " " << cell[x + 1][z].sFF << endl;
+				if (isValid(x + 1, z + 1))
+					topRight = get_probability(x + 1, z + 1, i) * get_inertia(x + 1, z + 1, i);
+				if (isValid(x - 1, z + 1))
+					topLeft = get_probability(x - 1, z + 1, i) * get_inertia(x - 1, z + 1, i);
+				if (isValid(x + 1, z - 1))
+					downRight = get_probability(x + 1, z - 1, i) * get_inertia(x + 1, z - 1, i);
+				if (isValid(x - 1, z - 1))
+					downLeft = get_probability(x - 1, z - 1, i) * get_inertia(x - 1, z - 1, i);
 			}
 		}
-
-		total = top + down + left + right;
+		/*if (agent[i].volunteer)
+		{
+			top = get_probability_volunteer(x, z + 1, i, com_id, o_id);
+			down = get_probability_volunteer(x, z - 1, i, com_id, o_id);
+			left = get_probability_volunteer(x - 1, z, i, com_id, o_id);
+			right = get_probability_volunteer(x + 1, z, i, com_id, o_id);
+			topRight = get_probability_volunteer(x + 1, z + 1, i, com_id, o_id);
+			topLeft = get_probability_volunteer(x - 1, z + 1, i, com_id, o_id);
+			downRight = get_probability_volunteer(x + 1, z - 1, i, com_id, o_id);
+			downLeft = get_probability_volunteer(x - 1, z - 1, i, com_id, o_id);
+		}*/
+		total = top + down + left + right + topRight + topLeft + downRight + downLeft;
 		/*if (determine_leader_waiting(agent[i].leader, i))
 		{
 			agent[i].waiting = true;
@@ -375,16 +474,12 @@ void CS_CELLULAR_AUTOMATA::update_Cell_AgentWantOccpied(){
 		if (total == 0)
 		{
 			agent[i].mStayInPlace = true;
-			//cell[x][z].m_OccupantID.push_back(i);
 			agent[i].position = PAIR_INT(x, z);
-			//cout << x << " " << z << endl;
 			agent[i].direction = local;
 			agent[i].pre_sFF = cell[x][z].sFF;
 			cell[x][z].occupant_id = i;
 			cell[x][z].occupied = 1;
 			cell[x][z].temp_dFF += DYNAMIC_VALUE;
-			//if (i == 467)
-			//	system("pause");
 			continue;
 		}
 
@@ -392,40 +487,57 @@ void CS_CELLULAR_AUTOMATA::update_Cell_AgentWantOccpied(){
 		down /= total;
 		left /= total;
 		right /= total;
+		topRight /= total;
+		topLeft /= total;
+		downRight /= total;
+		downLeft /= total;
 		down += top;
 		left += down;
+		right += left;
+		topRight += right;
+		topLeft += topRight;
+		downRight += topLeft;
 		double random_num = (double)rand() / RAND_MAX;
-		random_num += 0.00000001f;
 		if (random_num <= top && isValid(x, z + 1))
 		{
-			//cout << cell[x][z + 1].occupied_number << " " << cell[x][z + 1].m_OccupantID[cell[x][z + 1].occupied_number] << " ";
-			//if (cell[x][z + 1].occupied_number >= 3)
-			//	cout << cell[x][z + 1].occupied_number << endl;
 			int c_id = cell[x][z + 1].occupied_number;
 			cell[x][z + 1].m_OccupantID[c_id] = i;
 			cell[x][z + 1].occupied_number++;
-			//cout << cell[x][z + 1].occupied_number << " " << cell[x][z + 1].m_OccupantID[cell[x][z + 1].occupied_number] << endl;
 		}
 		else if (random_num > top && random_num <= down && isValid(x, z - 1))
 		{
-			//cout << cell[x][z - 1].occupied_number << " " << cell[x][z - 1].m_OccupantID[cell[x][z - 1].occupied_number] << " ";
 			cell[x][z - 1].m_OccupantID[cell[x][z - 1].occupied_number] = i;
 			cell[x][z - 1].occupied_number++;
-			//cout << cell[x][z-1].occupied_number << " " << cell[x][z - 1].m_OccupantID[cell[x][z - 1].occupied_number] << endl;
 		}
 		else if (random_num > down && random_num <= left && isValid(x - 1, z))
 		{
-			//cout << cell[x - 1][z].occupied_number << " " << cell[x - 1][z].m_OccupantID[cell[x - 1][z].occupied_number] << " ";
 			cell[x - 1][z].m_OccupantID[cell[x - 1][z].occupied_number] = i;
 			cell[x - 1][z].occupied_number++; 
-			//cout << cell[x - 1][z].occupied_number << " " << cell[x - 1][z].m_OccupantID[cell[x - 1][z].occupied_number] << endl;
 		}
-		else if (random_num > left && isValid(x + 1, z))
+		else if (random_num > left && isValid(x + 1, z) && (model->mNeighborType == 0 || (model->mNeighborType != 0 && random_num <= right)))
 		{
-			//cout << cell[x + 1][z].occupied_number << " " << cell[x + 1][z].m_OccupantID[cell[x + 1][z].occupied_number] << " ";
 			cell[x + 1][z].m_OccupantID[cell[x + 1][z].occupied_number] = i;
 			cell[x + 1][z].occupied_number++;
-			//cout << cell[x + 1][z].occupied_number << " " << cell[x + 1][z].m_OccupantID[cell[x + 1][z].occupied_number] << endl;
+		}
+		else if (random_num > right && random_num <= topRight)
+		{
+			cell[x + 1][z + 1].m_OccupantID[cell[x + 1][z + 1].occupied_number] = i;
+			cell[x + 1][z + 1].occupied_number++;
+		}
+		else if (random_num > topRight && random_num <= topLeft)
+		{
+			cell[x - 1][z + 1].m_OccupantID[cell[x - 1][z + 1].occupied_number] = i;
+			cell[x - 1][z + 1].occupied_number++;
+		}
+		else if (random_num > topLeft && random_num <= downRight)
+		{
+			cell[x + 1][z - 1].m_OccupantID[cell[x + 1][z - 1].occupied_number] = i;
+			cell[x + 1][z - 1].occupied_number++;
+		}
+		else if (random_num > downRight)
+		{
+			cell[x - 1][z - 1].m_OccupantID[cell[x - 1][z - 1].occupied_number] = i;
+			cell[x - 1][z - 1].occupied_number++;
 		}
 	}
 }
@@ -667,9 +779,181 @@ void CS_CELLULAR_AUTOMATA::update_leader_influence(){
 	}
 }
 
+void CS_CELLULAR_AUTOMATA::update_VolunteerPositionDisordered(){
+
+	check_volunteer_position();
+	check_volunteer_beside_obstacle();
+	for (unsigned int i = 0; i < blocked_obstacles.size(); i++)
+	{
+		int o_id = blocked_obstacles[i];
+		//detectVolunteerPosition(o_id);
+		for (unsigned int j = 0; j < obstacles[o_id].volunteer_id.size(); j++)
+		{
+			/*if (obstacles[o_id].volunteer_id[j] != -1)
+			continue;
+			int size = obstacles[o_id].candidate_id[j].size();
+			for (int k = 0; k < (int)obstacles[o_id].candidate_id[j].size(); k++)
+			{
+			int a_id = obstacles[o_id].candidate_id[j][k];
+			//處理候選人ID的時候沒處理好，所以強制跳過
+			if (agent[a_id].blocked_obstacle_id == -1)
+			continue;
+			if (!agent[a_id].beside_obstacle)
+			{
+			//cout << "aDFSF@FDSF" << endl;
+			agent[a_id].position = choose_direction_HighValueBased_fourDirection(agent[a_id].position.first, agent[a_id].position.second, a_id);
+			}
+			}*/
+			if (obstacles[o_id].volunteer_id[j] == -1)
+				continue;
+			int id = obstacles[o_id].volunteer_id[j];
+			if (agent[id].beside_obstacle)
+				continue;
+			if (agent[id].arrival)
+				continue;
+			if (agent[id].obstacle_component_id == -1)
+				continue;
+			if (agent[id].position.first == -1 || agent[id].position.second == -1)
+			{
+				cout << "ilegal position" << endl;
+				cout << agent[id].pre_pos.first << " " << agent[id].pre_pos.second << endl;
+				cout << agent[id].position.first << " " << agent[id].position.second << endl;
+				system("pause");
+			}
+			//agent[id].position = choose_direction_HighValueBased(agent[id].position.first, agent[id].position.second, id);
+			agent[id].position = choose_direction_HighValueBased_fourDirection(agent[id].position.first, agent[id].position.second, id);
+		}
+	}
+}
+
+void CS_CELLULAR_AUTOMATA::update_VolunteerPositionParallel(){
+
+	for (unsigned int i = 0; i < blocked_obstacles.size(); i++)
+	{
+		int o_id = blocked_obstacles[i];
+		detectVolunteerPosition(o_id);
+		for (unsigned int j = 0; j < obstacles[o_id].volunteer_id.size(); j++)
+		{
+			if (obstacles[o_id].volunteer_id[j] == -1)
+				continue;
+			int id = obstacles[o_id].volunteer_id[j];
+			if (agent[id].beside_obstacle)
+				continue;
+			if (agent[id].arrival)
+				continue;
+			if (agent[id].obstacle_component_id == -1)
+				continue;
+			float top = -FLT_MAX, down = -FLT_MAX, left = -FLT_MAX, right = -FLT_MAX, topRight = -FLT_MAX, topLeft = -FLT_MAX, downRight = -FLT_MAX, downLeft = -FLT_MAX;
+			int com_id = agent[id].obstacle_component_id;
+			int o_id = agent[id].blocked_obstacle_id;
+			int x = agent[id].position.first;
+			int z = agent[id].position.second;
+			top = get_probability_volunteer(x, z + 1, id, com_id, o_id);
+			down = get_probability_volunteer(x, z - 1, id, com_id, o_id);
+			left = get_probability_volunteer(x - 1, z, id, com_id, o_id);
+			right = get_probability_volunteer(x + 1, z, id, com_id, o_id);
+			topRight = get_probability_volunteer(x + 1, z + 1, id, com_id, o_id);
+			topLeft = get_probability_volunteer(x - 1, z + 1, id, com_id, o_id);
+			downRight = get_probability_volunteer(x + 1, z - 1, id, com_id, o_id);
+			downLeft = get_probability_volunteer(x - 1, z - 1, id, com_id, o_id);
+
+			double r = (double)rand() / RAND_MAX;
+			// normalize each direction, their sum are equal to one	
+			float total = top + down + left + right + topRight + topLeft + downRight + downLeft;
+			if (total == 0)
+			{
+				agent[id].mStayInPlace = true;
+				agent[id].position = PAIR_INT(x, z);
+				agent[id].direction = local;
+				agent[id].pre_sFF = cell[x][z].sFF;
+				cell[x][z].occupant_id = i;
+				cell[x][z].occupied = 1;
+				cell[x][z].temp_dFF += DYNAMIC_VALUE;
+				agent[id].pre_sFF = cell[x][z].sFF;
+				continue;
+			}
+			PAIR_INT direction[8] = { PAIR_INT(x, z + 1), PAIR_INT(x, z - 1), PAIR_INT(x - 1, z), PAIR_INT(x + 1, z), PAIR_INT(x + 1, z + 1), PAIR_INT(x - 1, z + 1), PAIR_INT(x + 1, z - 1), PAIR_INT(x - 1, z - 1) };
+			float buffer[8] = { top, down, left, right, topRight, topLeft, downRight, downLeft };
+			float distance[8] = { top, down, left, right, topRight, topLeft, downRight, downLeft };
+			sort(distance, distance + 8);
+			int count = 7;
+			while (distance[count] == -FLT_MAX)
+			{
+				if (count == 0)
+				{
+					cout << "volunteer stay at ori place. " << x << " " << z << endl;
+					cell[x][z].temp_dFF += DYNAMIC_VALUE;
+					agent[id].direction = local;
+					continue;
+				}
+				count--;
+			}
+			for (int k = 0; k < 8; k++)
+			{
+				if (distance[7] == buffer[k])
+				{
+					//cell[x][z].occupied = 0;
+					//cell[x][z].temp_dFF += DYNAMIC_VALUE;
+					//cell[direction[i].first][direction[i].second].occupied = 1;
+					//cell[direction[i].first][direction[i].second].occupant_id = id;
+					switch (k)
+					{
+					case 0:
+						cell[x][z + 1].m_OccupantID[cell[x][z + 1].occupied_number] = id;
+						cell[x][z + 1].occupied_number++;
+						break;
+					case 1:
+						cell[x][z - 1].m_OccupantID[cell[x][z - 1].occupied_number] = id;
+						cell[x][z - 1].occupied_number++;
+						break;
+					case 2:
+						cell[x - 1][z].m_OccupantID[cell[x - 1][z].occupied_number] = id;
+						cell[x - 1][z].occupied_number++;
+						break;
+					case 3:
+						cell[x + 1][z].m_OccupantID[cell[x + 1][z].occupied_number] = id;
+						cell[x + 1][z].occupied_number++;
+						break;
+					case 4:
+						cell[x + 1][z + 1].m_OccupantID[cell[x + 1][z + 1].occupied_number] = id;
+						cell[x + 1][z + 1].occupied_number++;
+						break;
+					case 5:
+						cell[x - 1][z + 1].m_OccupantID[cell[x - 1][z + 1].occupied_number] = id;
+						cell[x - 1][z + 1].occupied_number++;
+						break;
+					case 6:
+						cell[x + 1][z - 1].m_OccupantID[cell[x + 1][z - 1].occupied_number] = id;
+						cell[x + 1][z - 1].occupied_number++;
+						break;
+					case 7:
+						cell[x - 1][z - 1].m_OccupantID[cell[x - 1][z - 1].occupied_number] = id;
+						cell[x - 1][z - 1].occupied_number++;
+						break;
+					}
+				}
+			}
+		}
+	}
+}
+
+void CS_CELLULAR_AUTOMATA::update_volunteer_position(){
+
+	check_volunteer_position();
+	check_volunteer_beside_obstacle();
+	switch (model->mParallelUpdate)
+	{
+	case 0:
+		update_VolunteerPositionDisordered();
+		break;
+	case 1:
+		//update_VolunteerPositionParallel();
+		break;
+	}
+}
+
 void CS_CELLULAR_AUTOMATA::update_volunteer_towardToObstacle_action(){
 
-	//cout << "update volunteer toward to obstacle action." << endl;
 	/*check_volunteer_besideObstacle();
 	for (int i = 0; i < blocked_obstacles.size(); i++)
 	{
@@ -688,16 +972,14 @@ void CS_CELLULAR_AUTOMATA::update_volunteer_towardToObstacle_action(){
 		}
 	}
 	print_illegal_agent_information("volunteer_towardToObstacle_action");*/
-	check_volunteer_position();
-	check_volunteer_beside_obstacle();
+	//check_volunteer_position();
+	//check_volunteer_beside_obstacle();
 	for (int i = 0; i < (int)blocked_obstacles.size(); i++)
 	{
 		int o_id = blocked_obstacles[i];
+		detectVolunteerPosition(o_id);
 		for (int j = 0; j < (int)obstacles[o_id].volunteer_id.size(); j++)
 		{
-			//cout << obstacles[o_id].volunteer_id[j] << endl;
-			//cout << "obstacle_" << o_id << " com_" << j << endl;
-			//cout << "volunteerid: " << obstacles[o_id].volunteer_id[j] << endl;
 			/*if (obstacles[o_id].volunteer_id[j] != -1)
 				continue;
 			int size = obstacles[o_id].candidate_id[j].size(); 
@@ -712,19 +994,16 @@ void CS_CELLULAR_AUTOMATA::update_volunteer_towardToObstacle_action(){
 					//cout << "aDFSF@FDSF" << endl;
 					agent[a_id].position = choose_direction_HighValueBased_fourDirection(agent[a_id].position.first, agent[a_id].position.second, a_id);
 				}
-			}*/
+			}*/			
 			if (obstacles[o_id].volunteer_id[j] == -1)
 				continue;
 			int id = obstacles[o_id].volunteer_id[j];
-			//cout << agent[id].position.first << " " << agent[id].position.second << endl;
 			if (agent[id].beside_obstacle)
 				continue;
 			if (agent[id].arrival)
 				continue;
 			if (agent[id].obstacle_component_id == -1)
 				continue;
-			//cout << obstacles[i].component[j].first << " " << obstacles[i].component[j].second << endl;
-			//cout << agent[id].position.first << " " << agent[id].position.second << endl;
 			if (agent[id].position.first == -1 || agent[id].position.second == -1)
 			{
 				cout << "ilegal position" << endl;
@@ -732,19 +1011,31 @@ void CS_CELLULAR_AUTOMATA::update_volunteer_towardToObstacle_action(){
 				cout << agent[id].position.first << " " << agent[id].position.second << endl;
 				system("pause");
 			}
+			//agent[id].position = choose_direction_HighValueBased(agent[id].position.first, agent[id].position.second, id);
 			agent[id].position = choose_direction_HighValueBased_fourDirection(agent[id].position.first, agent[id].position.second, id);
-			//cout << agent[id].position.first << " " << agent[id].position.second << endl;
-			//cout << "---------------" << endl;
 		}
-		//cout << "=================" << endl;
+	}
+}
+
+void CS_CELLULAR_AUTOMATA::detectVolunteerPosition(int o_id){
+
+	for (unsigned int i = 0; i < obstacles[o_id].volunteer_id.size(); i++)
+	{
+		int id = obstacles[o_id].volunteer_id[i];
+		if (!agent[id].mBlockWay && isBlockTheWay(o_id, i))
+		{
+			system("pause");
+			agent[id].block_pos = agent[id].position;
+			agent[id].mBlockWay = true;
+			agent[id].beside_obstacle = false;
+			int mapID = getVolunteerMapID(o_id, i);
+			computeVolunteerSFFNotConsiderBlockPosition(o_id, i);
+		}
 	}
 }
 
 void CS_CELLULAR_AUTOMATA::update_blocked_obstacle_position(){
 
-	//cout << "update blocked obstacle position." << endl << endl;
-	//cout << "block obstacle size: " << blocked_obstacles.size() << endl;
-	//cout << "normal obstacle size: " << normal_obstacle.size() << endl;
 	switch (agent_psychology.obstacle_moveType)
 	{
 	case CS_OBSTACLE_MANUAL_MOVE:
@@ -754,7 +1045,24 @@ void CS_CELLULAR_AUTOMATA::update_blocked_obstacle_position(){
 		automatic_update_blocked_obstacle_position();
 		break;
 	}
-	//print_illegal_agent_information("blocked_obstacle_position");
+	for (int i = 0; i < model->agent_number; i++)
+	{
+		if (agent[i].arrival)
+			continue;
+		for (unsigned int j = 0; j < obstacles.size(); j++)
+		{
+			for (unsigned k = 0; k < obstacles[j].component.size(); k++)
+			{
+				if (agent[i].position == obstacles[j].component[k])
+				{
+					//cout << "commmmmmmmmm " << k << endl;
+					//if (agent[i].volunteer)
+					//	cout << "volunteereeeeeerere ";
+					//cout << agent[i].position.first << " " << agent[i].position.second << endl;
+				}
+			}
+		}
+	}
 }
 
 void CS_CELLULAR_AUTOMATA::automatic_update_blocked_obstacle_position(){
@@ -784,13 +1092,21 @@ void CS_CELLULAR_AUTOMATA::automatic_update_blocked_obstacle_position(){
 			}
 		}
 	}*/
-	
+	for (unsigned int i = 0; i < blocked_obstacles.size(); i++)
+	{
+		int id = blocked_obstacles[i];
+		for (unsigned int j = 0; j < obstacles[id].component.size(); j++)
+		{
+			if (obstacles[id].volunteer_id[j] == -1)
+				continue;
+			agent[obstacles[id].volunteer_id[j]].blocked_obstacle_id = id;
+		}
+	}
+	// 用來存被移動到目的地的obstacle的ID
 	vector<int> removal_obstacle;
-	//cout << "block size: " << blocked_obstacles.size() << endl;
-	for (int i = 0; i < (int)blocked_obstacles.size(); i++)
+	for (unsigned int i = 0; i < blocked_obstacles.size(); i++)
 	{
 		int o_id = blocked_obstacles[i];
-		//cout << !!obstacles[o_id].block << endl;
 		check_obstacle_arrive(o_id);
 		if (obstacles[o_id].arrive_destination)
 		{
@@ -807,55 +1123,38 @@ void CS_CELLULAR_AUTOMATA::automatic_update_blocked_obstacle_position(){
 			cout << "obstacle" << o_id << "'s volunteers didn't set up!." << endl << endl;
 			continue;
 		}*/
-		bool s = false;
+		bool ready = false;
 		for (unsigned int j = 0; j < obstacles[o_id].volunteer_id.size(); j++)
 		{
+			// 如果obstacle的每一個grid都有人要搬而且要搬的人都在obstacle旁邊準備要搬了
+			//if (obstacles[o_id].volunteer_id[j] == -1 || !agent[obstacles[o_id].volunteer_id[j]].beside_obstacle)
+			//{
+			//	ready = false;
+			//	break;
+			//}
+			// 如果obstacle其中一個component有人搬而且已經在準備好了
 			if (obstacles[o_id].volunteer_id[j] != -1 && agent[obstacles[o_id].volunteer_id[j]].beside_obstacle)
 			{
-				s = true;
+				ready = true;
 				break;
 			}
 		}
-		if (!s)
+		//obstacles[o_id].ready = ready;
+		if (!ready)
 			continue;
-		//cout << s << endl;
-		if (!obstacles[o_id].mHaveDes && s)
+		if (!obstacles[o_id].mHaveDes && ready)
 			findOptimalDestination(o_id);
-		for (int j = 0; j < obstacles[o_id].component.size(); j++)
-		{
-			//cout << obstacles[o_id].volunteer_id[j] << endl;
-		}
 		Direction move_direction;
 		if (isBeoccupied(o_id))
 		{
-			/*cout << "obstacle " << o_id << " destination be occupied." << endl;
-			for (unsigned int j = 0; j < obstacles[o_id].moveDestination.size(); j++)
-			{
-				int _x = obstacles[o_id].moveDestination[j].first;
-				int _z = obstacles[o_id].moveDestination[j].second;
-				cout << _x << " " << _z << ": " << !!cell[_x][_z].obstacle << " " << cell[_x][_z].obstacle_id << " " << o_id << endl;
-			}*/
 			//move_direction = obstalce_move_direction(o_id);
 			findOptimalDestination(o_id);
 			find_direction_towardToObstacleDestination(o_id, move_direction);
-			/*for (unsigned int j = 0; j < obstacles[o_id].moveDestination.size(); j++)
-			{
-				int _x = obstacles[o_id].moveDestination[j].first;
-				int _z = obstacles[o_id].moveDestination[j].second;
-				cout << _x << " " << _z << ": " << !!cell[_x][_z].obstacle << " " << cell[_x][_z].obstacle_id << " " << o_id << endl;
-			}*/
-		}
-		for (unsigned int j = 0; j < obstacles[o_id].moveDestination.size(); j++)
-		{
-			int _x = obstacles[o_id].moveDestination[j].first;
-			int _z = obstacles[o_id].moveDestination[j].second;
-			//cout << _x << " " << _z << ": " << !!cell[_x][_z].obstacle << " " << cell[_x][_z].obstacle_id << " " << o_id << endl;
 		}
 		if (!isBeoccupied(o_id))
 		{
 			find_direction_towardToObstacleDestination(o_id, move_direction);
 		}
-		//cout << "obstacle " << o_id << " destination: "<< endl;
 		for (unsigned int j = 0; j < obstacles[o_id].moveDestination.size(); j++)
 		{
 			int _x = obstacles[o_id].moveDestination[j].first;
@@ -863,9 +1162,7 @@ void CS_CELLULAR_AUTOMATA::automatic_update_blocked_obstacle_position(){
 			//cout << "obstacle " << o_id << endl;
 			//cout << _x << " " << _z << endl; //": " << !!cell[_x][_z].obstacle << " " << cell[_x][_z].obstacle_id << " " << o_id << endl << endl;
 		}
-		//cout << "obstacle " << o_id << " direction " << obstacles[o_id].direction.first << " " << obstacles[o_id].direction.second << endl;
 		check_obstacleMovement_blocked(o_id, move_direction);
-		//cout << "obstacle " << o_id << " direction " << obstacles[o_id].direction.first << " " << obstacles[o_id].direction.second << endl;
 		bool set = false;
 		for (unsigned int i = 0; i < obstacles[o_id].component.size(); i++)
 		{
@@ -878,14 +1175,14 @@ void CS_CELLULAR_AUTOMATA::automatic_update_blocked_obstacle_position(){
 		//float first_level = 12, second_level = 8, third_level = 4;
 		//float first_level_dis = 2.0f, second_level_dis = 4.0f, third_level_dis = 6.0f;
 		//再次確認志願者和障礙物的移動沒有越界
-		for (int j = 0; j < (int)obstacles[o_id].component.size(); j++)
+		for (unsigned int j = 0; j < obstacles[o_id].component.size(); j++)
 		{
 			int ox = obstacles[o_id].component[j].first;
 			int oz = obstacles[o_id].component[j].second;
 			int dx = obstacles[o_id].direction.first;
 			int dz = obstacles[o_id].direction.second;
-			if (set)
-			{
+			//if (set)
+			//{
 				/*for (int _x = -third_level_dis; _x <= third_level_dis; _x++)
 				{
 					for (int _z = -third_level_dis; _z <= third_level_dis; _z++)
@@ -911,7 +1208,7 @@ void CS_CELLULAR_AUTOMATA::automatic_update_blocked_obstacle_position(){
 					}
 				}*/
 				constructAFF(o_id);
-			}
+			//}
 			int id = obstacles[o_id].volunteer_id[j];
 			if (id == -1)
 				continue;
@@ -995,54 +1292,58 @@ void CS_CELLULAR_AUTOMATA::automatic_update_blocked_obstacle_position(){
 			}*/
 			if (!isValid(ox + dx, oz + dz))
 			{
-				cout << "ox " << ox << " oz " << oz << endl;
-				cout << dx << " " << dz << endl;
-				cout << ox + dx << " " << oz + dz << endl;
+				//cout << "ox " << ox << " oz " << oz << endl;
+				//cout << dx << " " << dz << endl;
+				//cout << ox + dx << " " << oz + dz << endl;
 				obstacles[o_id].movable = false;
 				break;
 			}
 			if (id != -1 && !isValid(agent[id].position.first + dx, agent[id].position.second + dz))
 			{
-				cout << "ax " << agent[id].position.first << " az " << agent[id].position.second << endl;
-				cout << dx << " " << dz << endl;
-				cout << agent[id].position.first + dx << " " << agent[id].position.second + dz << endl;
+				//cout << "ax " << agent[id].position.first << " az " << agent[id].position.second << endl;
+				//cout << dx << " " << dz << endl;
+				//cout << agent[id].position.first + dx << " " << agent[id].position.second + dz << endl;
 				delete_volunteer(o_id, j, id);
 				obstacles[o_id].movable = false;
-				//system("pause");
 				reset();
 			}
 		}
-		if (/*!obstacles[o_id].block*/ obstacles[o_id].movable && check_obstacle_weight(o_id))
+		if (/*!obstacles[o_id].block &&*/ obstacles[o_id].movable && check_obstacle_weight(o_id))
 		{
-			//cout << "obstacle " << o_id << " direction ";
 			switch (move_direction)
 			{
 			case _up:
-				//cout << "(0,1)" << endl;
 				obstacle_volunteer_movement(o_id, PAIR_INT(0, 1), move_direction);
 				break;
 			case _right:
-				//cout << "(1,0)" << endl;
 				obstacle_volunteer_movement(o_id, PAIR_INT(1, 0), move_direction);
 				break;
 			case _down:
-				//cout << "(0,-1)" << endl;
 				obstacle_volunteer_movement(o_id, PAIR_INT(0, -1), move_direction);
 				break;
 			case _left:
-				//cout << "(-1,0)" << endl;
 				obstacle_volunteer_movement(o_id, PAIR_INT(-1, 0), move_direction);
+				break;
+			case _topRight:
+				obstacle_volunteer_movement(o_id, PAIR_INT(1, 1), move_direction);
+				break;
+			case _topLeft:
+				obstacle_volunteer_movement(o_id, PAIR_INT(-1, 1), move_direction);
+				break;
+			case _downRight:
+				obstacle_volunteer_movement(o_id, PAIR_INT(1, -1), move_direction);
+				break;
+			case _downLeft:
+				obstacle_volunteer_movement(o_id, PAIR_INT(-1, -1), move_direction);
 				break;
 			}
 			obstacles[o_id].stuck_time = 0;
 		}
 		obstacle_timer_accumulation(o_id);
 		obstacles[o_id].stuck_time++;
-		//cout << "===========================" << endl;
 	}
 	for (unsigned int i = 0; i < removal_obstacle.size(); i++)
 	{
-		//cout << "removal " << removal_obstacle[i] << endl;
 		obstacles[removal_obstacle[i]].arrive_destination = true;
 		add_normal_obstacle(removal_obstacle[i]);
 	}
@@ -1057,7 +1358,7 @@ void CS_CELLULAR_AUTOMATA::automatic_update_blocked_obstacle_position(){
 
 void CS_CELLULAR_AUTOMATA::manual_update_blocked_obstacle_position(){
 
-	for (int i = 0; i < (int)blocked_obstacles.size(); i++)
+	for (unsigned int i = 0; i < blocked_obstacles.size(); i++)
 	{
 		int o_id = blocked_obstacles[i];
 		bool agent_setup = true;
@@ -1079,7 +1380,7 @@ void CS_CELLULAR_AUTOMATA::manual_update_blocked_obstacle_position(){
 			}
 		}
 		//再次確認志願者和障礙物的移動沒有越界
-		for (int i = 0; i < (int)obstacles[o_id].component.size(); i++)
+		for (unsigned int i = 0; i < obstacles[o_id].component.size(); i++)
 		{
 			int id = obstacles[o_id].volunteer_id[i];
 			int ox = obstacles[o_id].component[i].first;

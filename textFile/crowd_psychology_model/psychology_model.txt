@@ -6,7 +6,7 @@ standard_deviation 1
 interpersonal_stress_radius 5
 area_stress_intensity 2
 TENDENCY 0.1
-TIME_EFFECT 50
+TIME_EFFECT 40
 ANXIETY_WEIGHT 0.3
 WILL_WEIGHT 0.4
 GROUP_WILL_WEIGHT 0.3

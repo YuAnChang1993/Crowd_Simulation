@@ -1,0 +1,9 @@
+TEXTURES
+
+BEGIN 0
+IMAGE	block.png	
+END
+
+BEGIN 1
+IMAGE	disk.png
+END

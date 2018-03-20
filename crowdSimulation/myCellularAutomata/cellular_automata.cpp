@@ -20,7 +20,6 @@ void CS_CELLULAR_AUTOMATA::crowd_simulation_actionType(){
 CS_CELLULAR_AUTOMATA::CS_CELLULAR_AUTOMATA(){
 
 	read_data();
-	//recordingEvacuationTime();
 	initialize_variables();
 }
 
@@ -69,11 +68,6 @@ void CS_CELLULAR_AUTOMATA::initialize_variables(){
 	mTimeCounter = 0;
 	// decide crowd simulation type
 	crowd_simulation_actionType();
-	//float x;
-	//x = 0.2f;
-	//cout << 1 / (1 + exp(-5 * x)) << endl;
-	//cout << 1 / (1 + exp(-10 * x)) << endl;
-	//system("pause");
 	editing_mode = false;
 	change = false;
 	cell = new CELL*[model->size];
@@ -250,6 +244,7 @@ void CS_CELLULAR_AUTOMATA::initialize_variables(){
 		agent[i].psychology.resistance = (float)rand() / RAND_MAX;
 		agent[i].strength = false;
 		agent[i].remain_anxiety.resize(10);
+		agent[i].mAvoidObstacle.resize(obstacles.size(), false);
 		//weakness_agent.push_back(i);
 	}
 	// random generate leader
@@ -281,7 +276,7 @@ void CS_CELLULAR_AUTOMATA::initialize_variables(){
 	//{
 	//	cout << wall[i].first << " " << wall[i].second << endl;
 	//}
-}
+} 
 
 void CS_CELLULAR_AUTOMATA::findNeighboringAgent(){
 
@@ -309,8 +304,32 @@ void CS_CELLULAR_AUTOMATA::findNeighboringAgent(){
 
 void CS_CELLULAR_AUTOMATA::initialize_agent_position(){
 
+	float minx = 0, maxx = model->size, minz = 0, maxz = model->size;
 	for (int i = 0; i < (int)agent_group.size(); i++)
 	{
+		switch (model->mLeaderDistrubution)
+		{
+		case 0:
+			minz = (float)model->size * 0.66f;
+			break;
+		case 1:
+			minz = (float)model->size * 0.33f;
+			maxz = (float)model->size * 0.66f;
+			break;
+		case 2:
+			maxz = (float)model->size * 0.33f;
+			break;
+		case 3:
+			maxx = (float)model->size * 0.33f;
+			break;
+		case 4:
+			minx = (float)model->size * 0.33f;
+			maxx = (float)model->size * 0.66f;
+			break;
+		case 5:
+			minx = (float)model->size * 0.66f;
+			break;
+		}
 		int leader_ID = agent_group[i].member[0];
 		if (!agent[leader_ID].leader)
 		{
@@ -320,7 +339,12 @@ void CS_CELLULAR_AUTOMATA::initialize_agent_position(){
 		agent[leader_ID].position.second = rand() % model->size;
 		while (cell[agent[leader_ID].position.first][agent[leader_ID].position.second].occupied == 1 
 			|| cell[agent[leader_ID].position.first][agent[leader_ID].position.second].obstacle
-			|| (agent[leader_ID].compressive_leader && agent[leader_ID].position.first > model->size / 2))
+			/*|| (agent[leader_ID].compressive_leader && agent[leader_ID].position.second < model->size / 2)*/
+			|| (agent[leader_ID].compressive_leader && agent[leader_ID].position.second < minz)
+			|| (agent[leader_ID].compressive_leader && agent[leader_ID].position.second >= maxz)
+			|| (agent[leader_ID].compressive_leader && agent[leader_ID].position.first < minx)
+			|| (agent[leader_ID].compressive_leader && agent[leader_ID].position.first >= maxz)
+			|| cell[agent[leader_ID].position.first][agent[leader_ID].position.second].cell_type == 3)
 		{ // cell_type value != 0 means it's obstacle or exit
 			agent[leader_ID].position.first = rand() % model->size;
 			agent[leader_ID].position.second = rand() % model->size;
@@ -541,18 +565,6 @@ void CS_CELLULAR_AUTOMATA::set_group(){
 
 void CS_CELLULAR_AUTOMATA::compute_staticFF(){
 
-	//cout << "compute static floor field." << endl;
-	//vector<vector<vector<CELL_BFS>>> m;
-	//distance_map_.clear();
-	/*for (unsigned int i = 0; i < distance_map_.size(); i++)
-	{
-		for (unsigned int j = 0; j < distance_map_[i].size(); j++)
-		{
-			vector<CELL_BFS>().swap(distance_map_[i][j]);
-		}
-		vector<vector<CELL_BFS>>().swap(distance_map_[i]);
-	}
-	vector<vector<vector<CELL_BFS>>>().swap(distance_map_);*/
 	for (int i = 0; i < model->size; i++)
 	{
 		for (int j = 0; j < model->size; j++)
@@ -561,7 +573,6 @@ void CS_CELLULAR_AUTOMATA::compute_staticFF(){
 		}
 	}
 	int e_id = 0;
-	queue<CELL_BFS> distance_queue;
 	for (int i = 0; i < (int)mExit.size(); i++)
 	{
 		int xx = mExit[i].position.first;
@@ -569,14 +580,7 @@ void CS_CELLULAR_AUTOMATA::compute_staticFF(){
 		int dx = mExit[i].direction.first;
 		int dz = mExit[i].direction.second;
 		for (int j = 0; j < mExit[i].width; j++)
-		{
-			//vector<vector<CELL_BFS>> cell_distance_;
-			//cell_distance_.resize(model->size);
-			//for (int k = 0; k < model->size; k++)
-			//{
-			//	cell_distance_[k].resize(model->size);
-			//}
-			
+		{	
 			for (int x = 0; x < model->size; x++)
 			{
 				for (int z = 0; z < model->size; z++)
@@ -587,8 +591,6 @@ void CS_CELLULAR_AUTOMATA::compute_staticFF(){
 					cell_distance_[x][z].y = z;
 				}
 			}
-
-			//queue<CELL_BFS> distance_queue;
 			int e_x = xx + dx*j;
 			int e_z = zz + dz*j;
 			if (cell[e_x][e_z].obstacle && !obstacles[cell[e_x][e_z].obstacle_id].block_exit)
@@ -605,14 +607,12 @@ void CS_CELLULAR_AUTOMATA::compute_staticFF(){
 			switch (model->mType)
 			{
 			case 0:
-				verticalValue = 1.0f;
-				diagonalValue = 1.5f;
+				verticalValue = exp(0.5f * (mExit[i].width / total_width));
+				diagonalValue = exp(0.5f * (mExit[i].width / total_width));
 				break;
 			case 1:
-				verticalValue = 2 * exp(-(mExit[i].width / total_width));
-				diagonalValue = 2 * exp(-DIAGONAL_VALUE * (mExit[i].width) / total_width);
-				//verticalValue = (total_width / mExit[i].width);
-				//diagonalValue = (total_width / mExit[i].width);
+				verticalValue = exp(0.5f * (mExit[i].width / total_width));
+				diagonalValue = exp(0.5f * DIAGONAL_VALUE * (mExit[i].width / total_width));
 				break;
 			}
 			while (!distance_queue.empty())
@@ -655,49 +655,43 @@ void CS_CELLULAR_AUTOMATA::compute_staticFF(){
 					distance_queue.push(cell_distance_[x][y + 1]);
 				}
 				//Moore
-				/*if (isValid(x + 1, y + 1) && !isBlock(x + 1, y + 1) && cell_distance_[x + 1][y + 1].visisted == false)
+				if (model->mNeighborType != 0)
 				{
-					if (cell_distance_[x][y].distance + diagonalValue < cell_distance_[x + 1][y + 1].distance)
-						cell_distance_[x + 1][y + 1].distance = cell_distance_[x][y].distance + diagonalValue;
-					cell_distance_[x + 1][y + 1].visisted = true;
-					distance_queue.push(cell_distance_[x + 1][y + 1]);
-				}
+					if (isValid(x + 1, y + 1) && !isBlock(x + 1, y + 1) && cell_distance_[x + 1][y + 1].visisted == false)
+					{
+						if (cell_distance_[x][y].distance + diagonalValue < cell_distance_[x + 1][y + 1].distance)
+							cell_distance_[x + 1][y + 1].distance = cell_distance_[x][y].distance + diagonalValue;
+						cell_distance_[x + 1][y + 1].visisted = true;
+						distance_queue.push(cell_distance_[x + 1][y + 1]);
+					}
 
-				if (isValid(x + 1, y - 1) && !isBlock(x + 1, y - 1) && cell_distance_[x + 1][y - 1].visisted == false)
-				{
-					if (cell_distance_[x][y].distance + diagonalValue < cell_distance_[x + 1][y - 1].distance)
-						cell_distance_[x + 1][y - 1].distance = cell_distance_[x][y].distance + diagonalValue;
-					cell_distance_[x + 1][y - 1].visisted = true;
-					distance_queue.push(cell_distance_[x + 1][y - 1]);
-				}
+					if (isValid(x + 1, y - 1) && !isBlock(x + 1, y - 1) && cell_distance_[x + 1][y - 1].visisted == false)
+					{
+						if (cell_distance_[x][y].distance + diagonalValue < cell_distance_[x + 1][y - 1].distance)
+							cell_distance_[x + 1][y - 1].distance = cell_distance_[x][y].distance + diagonalValue;
+						cell_distance_[x + 1][y - 1].visisted = true;
+						distance_queue.push(cell_distance_[x + 1][y - 1]);
+					}
 
-				if (isValid(x - 1, y + 1) && !isBlock(x - 1, y + 1) && cell_distance_[x - 1][y + 1].visisted == false)
-				{
-					if (cell_distance_[x][y].distance + diagonalValue < cell_distance_[x - 1][y + 1].distance)
-						cell_distance_[x - 1][y + 1].distance = cell_distance_[x][y].distance + diagonalValue;
-					cell_distance_[x - 1][y + 1].visisted = true;
-					distance_queue.push(cell_distance_[x - 1][y + 1]);
-				}
+					if (isValid(x - 1, y + 1) && !isBlock(x - 1, y + 1) && cell_distance_[x - 1][y + 1].visisted == false)
+					{
+						if (cell_distance_[x][y].distance + diagonalValue < cell_distance_[x - 1][y + 1].distance)
+							cell_distance_[x - 1][y + 1].distance = cell_distance_[x][y].distance + diagonalValue;
+						cell_distance_[x - 1][y + 1].visisted = true;
+						distance_queue.push(cell_distance_[x - 1][y + 1]);
+					}
 
-				if (isValid(x - 1, y - 1) && !isBlock(x - 1, y - 1) && cell_distance_[x - 1][y - 1].visisted == false)
-				{
-					if (cell_distance_[x][y].distance + diagonalValue < cell_distance_[x - 1][y - 1].distance)
-						cell_distance_[x - 1][y - 1].distance = cell_distance_[x][y].distance + diagonalValue;
-					cell_distance_[x - 1][y - 1].visisted = true;
-					distance_queue.push(cell_distance_[x - 1][y - 1]);
-				}*/
+					if (isValid(x - 1, y - 1) && !isBlock(x - 1, y - 1) && cell_distance_[x - 1][y - 1].visisted == false)
+					{
+						if (cell_distance_[x][y].distance + diagonalValue < cell_distance_[x - 1][y - 1].distance)
+							cell_distance_[x - 1][y - 1].distance = cell_distance_[x][y].distance + diagonalValue;
+						cell_distance_[x - 1][y - 1].visisted = true;
+						distance_queue.push(cell_distance_[x - 1][y - 1]);
+					}
+				}
 			}
 			distance_map_[e_id] = cell_distance_;
 			e_id++;
-			//vector<vector<CELL_BFS>>().swap(cell_distance_);
-			/*for (int i = 0; i < model->size; i++)
-			{
-			delete[] cell_distance[i];
-			}
-			delete[] cell_distance;*/
-			//vector<vector<CELL_BFS>> mC;
-			//cell_distance_.swap(mC);
-			//cell_distance_.clear();
 		}
 	}
 
@@ -749,57 +743,19 @@ void CS_CELLULAR_AUTOMATA::compute_staticFF(){
 			//cout << cell[i][j]._sFF << endl;
 		}
 	}
-	//cout << cell[45][6].sFF << endl;
-	//distance_map_.swap(m);
-	//distance_map_.clear();
-	///CELL_BFS** cell_distance = new CELL_BFS*[model->size];
-	/*for (int i = 0; i < distance_map.size(); i++)
-	{
-	for (int j = 0; j < model->size; j++)
-	{
-	delete[] distance_map[i][j];
-	}
-	delete[] distance_map[i];
-	}
-	distance_map.clear();*/
-
-	/*for (std::vector<CELL_BFS **>::iterator it = distance_map.begin(); it != distance_map.end(); ++it)
-	{
-	delete(*it);
-	}*/
-
-	//output_data();
 }
 
 void CS_CELLULAR_AUTOMATA::compute_clean_sFF(){
 
-	//cout << "compute clean static floor field." << endl;
-	//clean_distance_map.clear();
-	/*for (unsigned int i = 0; i < clean_distance_map.size(); i++)
-	{
-		for (unsigned int j = 0; j < clean_distance_map[i].size(); j++)
-		{
-			vector<CELL_BFS>().swap(clean_distance_map[i][j]);
-		}
-		vector<vector<CELL_BFS>>().swap(clean_distance_map[i]);
-	}
-	vector<vector<vector<CELL_BFS>>>().swap(clean_distance_map);*/
 	int e_id = 0;
 	for (int i = 0; i < (int)mExit.size(); i++)
 	{
 		for (int j = 0; j < (int)mExit[i].width; j++)
 		{
-			//vector<vector<CELL_BFS>> cell_distance_;
-			//cell_distance_.resize(model->size);
 			int x = mExit[i].position.first;
 			int z = mExit[i].position.second;
 			int dx = mExit[i].direction.first;
 			int dz = mExit[i].direction.second;
-			//for (int k = 0; k < model->size; k++)
-			//{
-			//	cell_distance_[k].resize(model->size);
-			//}
-
 			for (int x = 0; x < model->size; x++)
 			{
 				for (int z = 0; z < model->size; z++)
@@ -810,16 +766,30 @@ void CS_CELLULAR_AUTOMATA::compute_clean_sFF(){
 					cell_distance_[x][z].y = z;
 				}
 			}
-
-			queue<CELL_BFS> distance_queue;
 			int e_x = x + dx*j;
 			int e_z = z + dz*j;
 			cell_distance_[e_x][e_z].distance = 0;
 			distance_queue.push(cell_distance_[e_x][e_z]);
-			int count = 0;
+			float verticalValue;
+			float diagonalValue;
+			float total_width = 0;
+			for (int k = 0; k < (int)mExit.size(); k++)
+			{
+				total_width += mExit[k].width;
+			}
+			switch (model->mType)
+			{
+			case 0:
+				verticalValue = exp(0.5f * (mExit[i].width / total_width));
+				diagonalValue = exp(0.5f * (mExit[i].width / total_width));
+				break;
+			case 1:
+				verticalValue = exp(0.5f * (mExit[i].width / total_width));
+				diagonalValue = exp(0.5f * DIAGONAL_VALUE * (mExit[i].width / total_width));
+				break;
+			}
 			while (!distance_queue.empty())
 			{
-				count++;
 				CELL_BFS temp = distance_queue.front();
 				distance_queue.pop();
 				int x = temp.x;
@@ -827,77 +797,73 @@ void CS_CELLULAR_AUTOMATA::compute_clean_sFF(){
 				cell_distance_[x][y].visisted = true;
 				if (isValid(x - 1, y) && cell_distance_[x - 1][y].visisted == false)
 				{
-					if (cell_distance_[x][y].distance + 1 < cell_distance_[x - 1][y].distance)
-						cell_distance_[x - 1][y].distance = cell_distance_[x][y].distance + 1;
+					if (cell_distance_[x][y].distance + verticalValue < cell_distance_[x - 1][y].distance)
+						cell_distance_[x - 1][y].distance = cell_distance_[x][y].distance + verticalValue;
 					cell_distance_[x - 1][y].visisted = true;
 					distance_queue.push(cell_distance_[x - 1][y]);
 				}
 
 				if (isValid(x + 1, y) && cell_distance_[x + 1][y].visisted == false)
 				{
-					if (cell_distance_[x][y].distance + 1 < cell_distance_[x + 1][y].distance)
-						cell_distance_[x + 1][y].distance = cell_distance_[x][y].distance + 1;
+					if (cell_distance_[x][y].distance + verticalValue < cell_distance_[x + 1][y].distance)
+						cell_distance_[x + 1][y].distance = cell_distance_[x][y].distance + verticalValue;
 					cell_distance_[x + 1][y].visisted = true;
 					distance_queue.push(cell_distance_[x + 1][y]);
 				}
 
 				if (isValid(x, y - 1) && cell_distance_[x][y - 1].visisted == false)
 				{
-					if (cell_distance_[x][y].distance + 1 < cell_distance_[x][y - 1].distance)
-						cell_distance_[x][y - 1].distance = cell_distance_[x][y].distance + 1;
+					if (cell_distance_[x][y].distance + verticalValue < cell_distance_[x][y - 1].distance)
+						cell_distance_[x][y - 1].distance = cell_distance_[x][y].distance + verticalValue;
 					cell_distance_[x][y - 1].visisted = true;
 					distance_queue.push(cell_distance_[x][y - 1]);
 				}
 
 				if (isValid(x, y + 1) && cell_distance_[x][y + 1].visisted == false)
 				{
-					if (cell_distance_[x][y].distance + 1 < cell_distance_[x][y + 1].distance)
-						cell_distance_[x][y + 1].distance = cell_distance_[x][y].distance + 1;
+					if (cell_distance_[x][y].distance + verticalValue < cell_distance_[x][y + 1].distance)
+						cell_distance_[x][y + 1].distance = cell_distance_[x][y].distance + verticalValue;
 					cell_distance_[x][y + 1].visisted = true;
 					distance_queue.push(cell_distance_[x][y + 1]);
 				}
 				// Moore
-				/*if (isValid(x + 1, y + 1) && cell_distance_[x + 1][y + 1].visisted == false)
+				if (model->mNeighborType != 0)
 				{
-					if (cell_distance_[x][y].distance + DIAGONAL_VALUE < cell_distance_[x + 1][y + 1].distance)
-						cell_distance_[x + 1][y + 1].distance = cell_distance_[x][y].distance + DIAGONAL_VALUE;
-					cell_distance_[x + 1][y + 1].visisted = true;
-					distance_queue.push(cell_distance_[x + 1][y + 1]);
-				}
+					if (isValid(x + 1, y + 1) && cell_distance_[x + 1][y + 1].visisted == false)
+					{
+						if (cell_distance_[x][y].distance + diagonalValue < cell_distance_[x + 1][y + 1].distance)
+							cell_distance_[x + 1][y + 1].distance = cell_distance_[x][y].distance + diagonalValue;
+						cell_distance_[x + 1][y + 1].visisted = true;
+						distance_queue.push(cell_distance_[x + 1][y + 1]);
+					}
 
-				if (isValid(x + 1, y - 1) && cell_distance_[x + 1][y - 1].visisted == false)
-				{
-					if (cell_distance_[x][y].distance + DIAGONAL_VALUE < cell_distance_[x + 1][y - 1].distance)
-						cell_distance_[x + 1][y - 1].distance = cell_distance_[x][y].distance + DIAGONAL_VALUE;
-					cell_distance_[x + 1][y - 1].visisted = true;
-					distance_queue.push(cell_distance_[x + 1][y - 1]);
-				}
+					if (isValid(x + 1, y - 1) && cell_distance_[x + 1][y - 1].visisted == false)
+					{
+						if (cell_distance_[x][y].distance + diagonalValue < cell_distance_[x + 1][y - 1].distance)
+							cell_distance_[x + 1][y - 1].distance = cell_distance_[x][y].distance + diagonalValue;
+						cell_distance_[x + 1][y - 1].visisted = true;
+						distance_queue.push(cell_distance_[x + 1][y - 1]);
+					}
 
-				if (isValid(x - 1, y + 1) && cell_distance_[x - 1][y + 1].visisted == false)
-				{
-					if (cell_distance_[x][y].distance + DIAGONAL_VALUE < cell_distance_[x - 1][y + 1].distance)
-						cell_distance_[x - 1][y + 1].distance = cell_distance_[x][y].distance + DIAGONAL_VALUE;
-					cell_distance_[x - 1][y + 1].visisted = true;
-					distance_queue.push(cell_distance_[x - 1][y + 1]);
-				}
+					if (isValid(x - 1, y + 1) && cell_distance_[x - 1][y + 1].visisted == false)
+					{
+						if (cell_distance_[x][y].distance + diagonalValue < cell_distance_[x - 1][y + 1].distance)
+							cell_distance_[x - 1][y + 1].distance = cell_distance_[x][y].distance + diagonalValue;
+						cell_distance_[x - 1][y + 1].visisted = true;
+						distance_queue.push(cell_distance_[x - 1][y + 1]);
+					}
 
-				if (isValid(x - 1, y - 1) && cell_distance_[x - 1][y - 1].visisted == false)
-				{
-					if (cell_distance_[x][y].distance + DIAGONAL_VALUE < cell_distance_[x - 1][y - 1].distance)
-						cell_distance_[x - 1][y - 1].distance = cell_distance_[x][y].distance + DIAGONAL_VALUE;
-					cell_distance_[x - 1][y - 1].visisted = true;
-					distance_queue.push(cell_distance_[x - 1][y - 1]);
-				}*/
+					if (isValid(x - 1, y - 1) && cell_distance_[x - 1][y - 1].visisted == false)
+					{
+						if (cell_distance_[x][y].distance + diagonalValue < cell_distance_[x - 1][y - 1].distance)
+							cell_distance_[x - 1][y - 1].distance = cell_distance_[x][y].distance + diagonalValue;
+						cell_distance_[x - 1][y - 1].visisted = true;
+						distance_queue.push(cell_distance_[x - 1][y - 1]);
+					}
+				}
 			}
-			//cout << count << endl;
 			clean_distance_map[e_id] = cell_distance_;
 			e_id++;
-			//vector<vector<CELL_BFS>>().swap(cell_distance_);
-			/*for (int i = 0; i < model->size; i++)
-			{
-			delete[] cell_distance[i];
-			}
-			delete[] cell_distance;*/
 		}
 	}
 
@@ -932,22 +898,12 @@ void CS_CELLULAR_AUTOMATA::compute_clean_sFF(){
 // Volunteers take the blocked obstacle as the exit
 void CS_CELLULAR_AUTOMATA::compute_volunteer_staticFF(int o_id, int com_id){
 
-	//cout << "compute obstacle_" << o_id << "'s component_" << com_id << " static floor field." << endl;
 	int id = 0;
 	for (int i = 0; i < o_id; i++)
 	{
 		id += obstacles[i].component.size();
 	}
 	id += com_id;
-	//volunteer_distance_map[id].clear();
-	//vector<vector<CELL_BFS>>().swap(volunteer_distance_map[id]);
-	//vector<vector<CELL_BFS>> cell_distance_;
-	//cell_distance_.resize(model->size);
-	//for (int j = 0; j < model->size; j++)
-	//{
-	//	cell_distance_[j].resize(model->size);
-	//}
-
 	for (int x = 0; x < model->size; x++)
 	{
 		for (int y = 0; y < model->size; y++)
@@ -958,13 +914,11 @@ void CS_CELLULAR_AUTOMATA::compute_volunteer_staticFF(int o_id, int com_id){
 			cell_distance_[x][y].y = y;
 		}
 	}
-
-	queue<CELL_BFS> distance_queue;
 	int exit_x = obstacles[o_id].component[com_id].first;
 	int exit_y = obstacles[o_id].component[com_id].second;
 	cell_distance_[exit_x][exit_y].distance = 0;
 	distance_queue.push(cell_distance_[exit_x][exit_y]);
-
+	float verticalValue = 1;
 	while (!distance_queue.empty()){
 		CELL_BFS temp = distance_queue.front();
 		distance_queue.pop();
@@ -973,64 +927,65 @@ void CS_CELLULAR_AUTOMATA::compute_volunteer_staticFF(int o_id, int com_id){
 		cell_distance_[x][y].visisted = true;
 
 		if (isValid(x - 1, y) && !cell[x - 1][y].obstacle && cell_distance_[x - 1][y].visisted == false){
-			if (cell_distance_[x][y].distance + 1 < cell_distance_[x - 1][y].distance)
-				cell_distance_[x - 1][y].distance = cell_distance_[x][y].distance + 1;
+			if (cell_distance_[x][y].distance + verticalValue < cell_distance_[x - 1][y].distance)
+				cell_distance_[x - 1][y].distance = cell_distance_[x][y].distance + verticalValue;
 			cell_distance_[x - 1][y].visisted = true;
 			distance_queue.push(cell_distance_[x - 1][y]);
 		}
 
 		if (isValid(x + 1, y) && !cell[x + 1][y].obstacle && cell_distance_[x + 1][y].visisted == false){
-			if (cell_distance_[x][y].distance + 1 < cell_distance_[x + 1][y].distance)
-				cell_distance_[x + 1][y].distance = cell_distance_[x][y].distance + 1;
+			if (cell_distance_[x][y].distance + verticalValue < cell_distance_[x + 1][y].distance)
+				cell_distance_[x + 1][y].distance = cell_distance_[x][y].distance + verticalValue;
 			cell_distance_[x + 1][y].visisted = true;
 			distance_queue.push(cell_distance_[x + 1][y]);
 		}
 
 		if (isValid(x, y - 1) && !cell[x][y - 1].obstacle&& cell_distance_[x][y - 1].visisted == false){
-			if (cell_distance_[x][y].distance + 1 < cell_distance_[x][y - 1].distance)
-				cell_distance_[x][y - 1].distance = cell_distance_[x][y].distance + 1;
+			if (cell_distance_[x][y].distance + verticalValue < cell_distance_[x][y - 1].distance)
+				cell_distance_[x][y - 1].distance = cell_distance_[x][y].distance + verticalValue;
 			cell_distance_[x][y - 1].visisted = true;
 			distance_queue.push(cell_distance_[x][y - 1]);
 		}
 
 		if (isValid(x, y + 1) && !cell[x][y + 1].obstacle && cell_distance_[x][y + 1].visisted == false){
-			if (cell_distance_[x][y].distance + 1 < cell_distance_[x][y + 1].distance)
-				cell_distance_[x][y + 1].distance = cell_distance_[x][y].distance + 1;
+			if (cell_distance_[x][y].distance + verticalValue < cell_distance_[x][y + 1].distance)
+				cell_distance_[x][y + 1].distance = cell_distance_[x][y].distance + verticalValue;
 			cell_distance_[x][y + 1].visisted = true;
 			distance_queue.push(cell_distance_[x][y + 1]);
 		}
 		// moore
-		/*if (isValid(x + 1, y + 1) && !cell[x + 1][y + 1].obstacle && cell_distance_[x + 1][y + 1].visisted == false){
-			if (cell_distance_[x][y].distance + DIAGONAL_VALUE < cell_distance_[x + 1][y + 1].distance)
-				cell_distance_[x + 1][y + 1].distance = cell_distance_[x][y].distance + DIAGONAL_VALUE;
-			cell_distance_[x + 1][y + 1].visisted = true;
-			distance_queue.push(cell_distance_[x + 1][y + 1]);
-		}
+		if (model->mNeighborType != 0)
+		{
+			if (isValid(x + 1, y + 1) && !cell[x + 1][y + 1].obstacle && cell_distance_[x + 1][y + 1].visisted == false){
+				if (cell_distance_[x][y].distance + DIAGONAL_VALUE < cell_distance_[x + 1][y + 1].distance)
+					cell_distance_[x + 1][y + 1].distance = cell_distance_[x][y].distance + DIAGONAL_VALUE;
+				cell_distance_[x + 1][y + 1].visisted = true;
+				distance_queue.push(cell_distance_[x + 1][y + 1]);
+			}
 
-		if (isValid(x + 1, y - 1) && !cell[x + 1][y - 1].obstacle && cell_distance_[x + 1][y - 1].visisted == false){
-			if (cell_distance_[x][y].distance + DIAGONAL_VALUE < cell_distance_[x + 1][y - 1].distance)
-				cell_distance_[x + 1][y - 1].distance = cell_distance_[x][y].distance + DIAGONAL_VALUE;
-			cell_distance_[x + 1][y - 1].visisted = true;
-			distance_queue.push(cell_distance_[x + 1][y - 1]);
-		}
+			if (isValid(x + 1, y - 1) && !cell[x + 1][y - 1].obstacle && cell_distance_[x + 1][y - 1].visisted == false){
+				if (cell_distance_[x][y].distance + DIAGONAL_VALUE < cell_distance_[x + 1][y - 1].distance)
+					cell_distance_[x + 1][y - 1].distance = cell_distance_[x][y].distance + DIAGONAL_VALUE;
+				cell_distance_[x + 1][y - 1].visisted = true;
+				distance_queue.push(cell_distance_[x + 1][y - 1]);
+			}
 
-		if (isValid(x - 1, y + 1) && !cell[x - 1][y + 1].obstacle && cell_distance_[x - 1][y + 1].visisted == false){
-			if (cell_distance_[x][y].distance + DIAGONAL_VALUE < cell_distance_[x - 1][y + 1].distance)
-				cell_distance_[x - 1][y + 1].distance = cell_distance_[x][y].distance + DIAGONAL_VALUE;
-			cell_distance_[x - 1][y + 1].visisted = true;
-			distance_queue.push(cell_distance_[x - 1][y + 1]);
-		}
+			if (isValid(x - 1, y + 1) && !cell[x - 1][y + 1].obstacle && cell_distance_[x - 1][y + 1].visisted == false){
+				if (cell_distance_[x][y].distance + DIAGONAL_VALUE < cell_distance_[x - 1][y + 1].distance)
+					cell_distance_[x - 1][y + 1].distance = cell_distance_[x][y].distance + DIAGONAL_VALUE;
+				cell_distance_[x - 1][y + 1].visisted = true;
+				distance_queue.push(cell_distance_[x - 1][y + 1]);
+			}
 
-		if (isValid(x - 1, y - 1) && !cell[x - 1][y - 1].obstacle && cell_distance_[x - 1][y - 1].visisted == false){
-			if (cell_distance_[x][y].distance + DIAGONAL_VALUE < cell_distance_[x - 1][y - 1].distance)
-				cell_distance_[x - 1][y - 1].distance = cell_distance_[x][y].distance + DIAGONAL_VALUE;
-			cell_distance_[x - 1][y - 1].visisted = true;
-			distance_queue.push(cell_distance_[x - 1][y - 1]);
-		}*/
+			if (isValid(x - 1, y - 1) && !cell[x - 1][y - 1].obstacle && cell_distance_[x - 1][y - 1].visisted == false){
+				if (cell_distance_[x][y].distance + DIAGONAL_VALUE < cell_distance_[x - 1][y - 1].distance)
+					cell_distance_[x - 1][y - 1].distance = cell_distance_[x][y].distance + DIAGONAL_VALUE;
+				cell_distance_[x - 1][y - 1].visisted = true;
+				distance_queue.push(cell_distance_[x - 1][y - 1]);
+			}
+		}
 	}
 	volunteer_distance_map[id] = cell_distance_;
-	//cout << id << endl;
-	//vector<vector<CELL_BFS>>().swap(cell_distance_);
 	float max = -FLT_MAX;
 
 	for (int i = 0; i < model->size; i++)
@@ -1057,34 +1012,141 @@ void CS_CELLULAR_AUTOMATA::compute_volunteer_staticFF(int o_id, int com_id){
 	}
 }
 
+void CS_CELLULAR_AUTOMATA::computeVolunteerSFFNotConsiderBlockPosition(int o_id, int com_id){
+
+	int mapID = getVolunteerMapID(o_id, com_id);
+	for (int x = 0; x < model->size; x++)
+	{
+		for (int y = 0; y < model->size; y++)
+		{
+			cell_distance_[x][y].visisted = false;
+			cell_distance_[x][y].distance = FLT_MAX;
+			cell_distance_[x][y].x = x;
+			cell_distance_[x][y].y = y;
+		}
+	}
+
+	bool firstRound = true;
+	int volunteerID = obstacles[o_id].volunteer_id[com_id];
+	int exit_x = obstacles[o_id].component[com_id].first;
+	int exit_y = obstacles[o_id].component[com_id].second;
+	cell_distance_[exit_x][exit_y].distance = 0;
+	distance_queue.push(cell_distance_[exit_x][exit_y]);
+
+	while (!distance_queue.empty()){
+		CELL_BFS temp = distance_queue.front();
+		distance_queue.pop();
+		int x = temp.x;
+		int y = temp.y;
+		cell_distance_[x][y].visisted = true;
+
+		if (isValid(x - 1, y) && !cell[x - 1][y].obstacle && cell_distance_[x - 1][y].visisted == false
+			&& !(firstRound && agent[volunteerID].block_pos == PAIR_INT(x - 1, y)) ){
+			if (cell_distance_[x][y].distance + 1 < cell_distance_[x - 1][y].distance)
+				cell_distance_[x - 1][y].distance = cell_distance_[x][y].distance + 1;
+			cell_distance_[x - 1][y].visisted = true;
+			distance_queue.push(cell_distance_[x - 1][y]);
+			firstRound = false;
+		}
+
+		if (isValid(x + 1, y) && !cell[x + 1][y].obstacle && cell_distance_[x + 1][y].visisted == false
+			&& !(firstRound && agent[volunteerID].block_pos == PAIR_INT(x + 1, y)) ){
+			if (cell_distance_[x][y].distance + 1 < cell_distance_[x + 1][y].distance)
+				cell_distance_[x + 1][y].distance = cell_distance_[x][y].distance + 1;
+			cell_distance_[x + 1][y].visisted = true;
+			distance_queue.push(cell_distance_[x + 1][y]);
+			firstRound = false;
+		}
+
+		if (isValid(x, y - 1) && !cell[x][y - 1].obstacle&& cell_distance_[x][y - 1].visisted == false
+			&& !(firstRound && agent[volunteerID].block_pos == PAIR_INT(x, y - 1)) ){
+			if (cell_distance_[x][y].distance + 1 < cell_distance_[x][y - 1].distance)
+				cell_distance_[x][y - 1].distance = cell_distance_[x][y].distance + 1;
+			cell_distance_[x][y - 1].visisted = true;
+			distance_queue.push(cell_distance_[x][y - 1]);
+			firstRound = false;
+		}
+
+		if (isValid(x, y + 1) && !cell[x][y + 1].obstacle && cell_distance_[x][y + 1].visisted == false
+			&& !(firstRound && agent[volunteerID].block_pos == PAIR_INT(x, y + 1)) ){
+			if (cell_distance_[x][y].distance + 1 < cell_distance_[x][y + 1].distance)
+				cell_distance_[x][y + 1].distance = cell_distance_[x][y].distance + 1;
+			cell_distance_[x][y + 1].visisted = true;
+			distance_queue.push(cell_distance_[x][y + 1]);
+			firstRound = false;
+		}
+		// moore
+		if (model->mNeighborType != 0)
+		{
+			if (isValid(x + 1, y + 1) && !cell[x + 1][y + 1].obstacle && cell_distance_[x + 1][y + 1].visisted == false
+				&& !(firstRound && agent[volunteerID].block_pos == PAIR_INT(x + 1, y + 1)) ){
+				if (cell_distance_[x][y].distance + DIAGONAL_VALUE < cell_distance_[x + 1][y + 1].distance)
+					cell_distance_[x + 1][y + 1].distance = cell_distance_[x][y].distance + DIAGONAL_VALUE;
+				cell_distance_[x + 1][y + 1].visisted = true;
+				distance_queue.push(cell_distance_[x + 1][y + 1]);
+			}
+
+			if (isValid(x + 1, y - 1) && !cell[x + 1][y - 1].obstacle && cell_distance_[x + 1][y - 1].visisted == false
+				&& !(firstRound && agent[volunteerID].block_pos == PAIR_INT(x + 1, y - 1)) ){
+				if (cell_distance_[x][y].distance + DIAGONAL_VALUE < cell_distance_[x + 1][y - 1].distance)
+					cell_distance_[x + 1][y - 1].distance = cell_distance_[x][y].distance + DIAGONAL_VALUE;
+				cell_distance_[x + 1][y - 1].visisted = true;
+				distance_queue.push(cell_distance_[x + 1][y - 1]);
+			}
+
+			if (isValid(x - 1, y + 1) && !cell[x - 1][y + 1].obstacle && cell_distance_[x - 1][y + 1].visisted == false
+				&& !(firstRound && agent[volunteerID].block_pos == PAIR_INT(x - 1, y + 1)) ){
+				if (cell_distance_[x][y].distance + DIAGONAL_VALUE < cell_distance_[x - 1][y + 1].distance)
+					cell_distance_[x - 1][y + 1].distance = cell_distance_[x][y].distance + DIAGONAL_VALUE;
+				cell_distance_[x - 1][y + 1].visisted = true;
+				distance_queue.push(cell_distance_[x - 1][y + 1]);
+			}
+
+			if (isValid(x - 1, y - 1) && !cell[x - 1][y - 1].obstacle && cell_distance_[x - 1][y - 1].visisted == false
+				&& !(firstRound && agent[volunteerID].block_pos == PAIR_INT(x - 1, y - 1)) ){
+				if (cell_distance_[x][y].distance + DIAGONAL_VALUE < cell_distance_[x - 1][y - 1].distance)
+					cell_distance_[x - 1][y - 1].distance = cell_distance_[x][y].distance + DIAGONAL_VALUE;
+				cell_distance_[x - 1][y - 1].visisted = true;
+				distance_queue.push(cell_distance_[x - 1][y - 1]);
+			}
+		}
+	}
+	volunteer_distance_map[mapID] = cell_distance_;
+	float max = -FLT_MAX;
+
+	for (int i = 0; i < model->size; i++)
+	{
+		for (int j = 0; j < model->size; j++)
+		{
+			if (volunteer_distance_map[mapID][i][j].distance == FLT_MAX)
+				continue;
+			volunteer_distance_map[mapID][i][j].sFF = volunteer_distance_map[mapID][i][j].distance;
+			if (volunteer_distance_map[mapID][i][j].distance > max)
+				max = volunteer_distance_map[mapID][i][j].distance;
+		}
+	}
+	// scale the value in 0~exp(13)
+	for (int i = 0; i < model->size; i++)
+	{
+		for (int j = 0; j < model->size; j++)
+		{
+			if (volunteer_distance_map[mapID][i][j].distance == FLT_MAX)
+				continue;
+			volunteer_distance_map[mapID][i][j].sFF_color = (max - volunteer_distance_map[mapID][i][j].distance) / max;
+			volunteer_distance_map[mapID][i][j]._sFF = (max - volunteer_distance_map[mapID][i][j].distance) / max;
+		}
+	}
+}
+
 void CS_CELLULAR_AUTOMATA::computeNewMapWithoutExit(int exit_block[]){
 
-	//special_distance_map.clear();
-	//for (unsigned int i = 0; i < special_distance_map.size(); i++)
-	//{
-	//	for (unsigned int j = 0; j < special_distance_map[i].size(); j++)
-	//	{
-	//		vector<CELL_BFS>().swap(special_distance_map[i][j]);
-	//	}
-	//	vector<vector<CELL_BFS>>().swap(special_distance_map[i]);
-	//}
-	//vector<vector<vector<CELL_BFS>>>().swap(special_distance_map);
 	int FloorFieldMapID = 0;
 	for (int i = 0; i < (int)mExit.size(); i++)
 	{
 		FloorFieldMapID += (int)(pow(2, i) * exit_block[i]);
 	}
-	for (int i = 0; i < 4; i++)
-	{
-		cout << exit_block[i] << " ";
-	}
-	cout << endl;
-	//system("pause");
-	//cout << "FloorFieldMapID: " << FloorFieldMapID << endl;
 	if (FloorFieldMapID == pow(2, mExit.size()) - 1)
 		return;
-	//special_distance_map[FloorFieldMapID].clear();
-	//cout << "mExit Size: " << mExit.size() << endl;
 	int e_id = 0;
 	int count = 0;
 	for (int i = 0; i < (int)mExit.size(); i++)
@@ -1095,11 +1157,6 @@ void CS_CELLULAR_AUTOMATA::computeNewMapWithoutExit(int exit_block[]){
 		int ez = mExit[i].position.second;
 		int dx = mExit[i].direction.first;
 		int dz = mExit[i].direction.second;
-		//if (cell[ex][ez].obstacle && !obstacles[cell[ex][ez].obstacle_id].block_exit)
-		//	continue;
-		//cout << i << endl;
-		//cout << exp(-20) << endl;
-		//system("pause");
 		for (int j = 0; j < mExit[i].width; j++)
 		{
 			for (int x = 0; x < model->size; x++)
@@ -1112,19 +1169,10 @@ void CS_CELLULAR_AUTOMATA::computeNewMapWithoutExit(int exit_block[]){
 					distance_buffer[x][z].y = z;
 				}
 			}
-			//queue<CELL_BFS> distance_queue;
 			int e_x = ex + dx*j;
 			int e_z = ez + dz*j;
 			distance_buffer[e_x][e_z].distance = 0;
 			distance_queue.push(distance_buffer[e_x][e_z]);
-			/*distance_buffer[20][0].distance = 1;
-			distance_queue.push(distance_buffer[20][0]);
-			CELL_BFS t = distance_queue.front();
-			cout << t.distance << endl;
-			distance_queue.pop();
-			t = distance_queue.front();
-			cout << t.distance << endl;
-			system("pause");*/
 			float verticalValue;
 			float diagonalValue;
 			float total_width = 0;
@@ -1132,7 +1180,6 @@ void CS_CELLULAR_AUTOMATA::computeNewMapWithoutExit(int exit_block[]){
 			{
 				total_width += mExit[k].width;
 			}
-			//cout << model->mType << endl;
 			switch (model->mType)
 			{
 			case 0:
@@ -1140,21 +1187,16 @@ void CS_CELLULAR_AUTOMATA::computeNewMapWithoutExit(int exit_block[]){
 				diagonalValue = 1.5f;
 				break;
 			case 1:
-				verticalValue = 2 * exp(-(mExit[i].width / total_width));
-				diagonalValue = 2 * exp(-DIAGONAL_VALUE * (mExit[i].width) / total_width);
-				//cout << verticalValue << endl;
-				//cout << diagonalValue << endl;
+				verticalValue = exp((mExit[i].width / total_width));
+				diagonalValue = exp(DIAGONAL_VALUE * (mExit[i].width / total_width));
 				break;
 			}
-			//system("pause");
 			while (!distance_queue.empty())
 			{
 				CELL_BFS temp = distance_queue.front();
 				distance_queue.pop();
 				int x = temp.x;
 				int y = temp.y;
-				//cout << x << " " << y << endl;
-				//cout << count << endl;
 				distance_buffer[x][y].visisted = true;
 				if (isValid(x - 1, y) && distance_buffer[x - 1][y].visisted == false && !cell[x - 1][y].obstacle)
 				{
@@ -1187,7 +1229,7 @@ void CS_CELLULAR_AUTOMATA::computeNewMapWithoutExit(int exit_block[]){
 					distance_buffer[x][y + 1].visisted = true;
 					distance_queue.push(distance_buffer[x][y + 1]);
 				}
-				/*
+				// Moore
 				if (isValid(x + 1, y + 1) && distance_buffer[x + 1][y + 1].visisted == false && !cell[x + 1][y + 1].obstacle)
 				{
 					if (distance_buffer[x][y].distance + diagonalValue < distance_buffer[x + 1][y + 1].distance)
@@ -1219,16 +1261,10 @@ void CS_CELLULAR_AUTOMATA::computeNewMapWithoutExit(int exit_block[]){
 					distance_buffer[x - 1][y - 1].visisted = true;
 					distance_queue.push(distance_buffer[x - 1][y - 1]);
 				}
-				*/
-				//if (count > 9998)
-				//	system("pause");
-				count++;
+				
 			}
-			//cout << count << endl;
 			special_distance_map[e_id] = distance_buffer;
 			e_id++;
-			//queue<CELL_BFS> empty;
-			//swap(distance_queue, empty);
 		}
 	}
 
@@ -1338,7 +1374,6 @@ void CS_CELLULAR_AUTOMATA::computeNewMapWithoutExit(int o_id){
 			}
 		}
 	}
-	//system("pause");
 
 	for (int i = 0; i < (int)n_exits.size(); i++)
 	{
@@ -1467,8 +1502,6 @@ void CS_CELLULAR_AUTOMATA::computeNewMapWithoutExit(int o_id){
 		}
 	}
 	
-	//cout << cell_manager.specific_max_sFF.size() << endl;
-	//system("pause");
 	cell_manager.specific_max_sFF[o_id] = max;
 	for (int i = 0; i < model->size; i++)
 	{
@@ -1893,6 +1926,7 @@ void CS_CELLULAR_AUTOMATA::check_volunteer_besideObstacle(){
 void CS_CELLULAR_AUTOMATA::check_volunteer_beside_obstacle(){
 
 	for (int i = 0; i < model->agent_number; i++)
+
 	{
 		if (agent[i].beside_obstacle)
 		{
@@ -1901,11 +1935,11 @@ void CS_CELLULAR_AUTOMATA::check_volunteer_beside_obstacle(){
 		}
 	}
 	// block obstacle size
-	for (int i = 0; i < (int)blocked_obstacles.size(); i++)
+	for (unsigned int i = 0; i < blocked_obstacles.size(); i++)
 	{
 		int o_id = blocked_obstacles[i];
 		// block component size
-		for (int j = 0; j < (int)obstacles[o_id].volunteer_id.size(); j++)
+		for (unsigned int j = 0; j < obstacles[o_id].volunteer_id.size(); j++)
 		{
 			/*if (obstacles[o_id].volunteer_id[j] != -1)
 				continue;
@@ -1922,16 +1956,25 @@ void CS_CELLULAR_AUTOMATA::check_volunteer_beside_obstacle(){
 				}
 			}*/
 			if (obstacles[o_id].volunteer_id[j] == -1)
+			{
+				//cout << "got you bro! " << j << endl;
 				continue;
+			}
 			int id = obstacles[o_id].volunteer_id[j];
 			if (agent[id].arrival)
 			{
 				obstacles[o_id].volunteer_id[j] = -1;
 				continue;
 			}
-			if (pair_int_distance(agent[id].position, obstacles[o_id].component[j]) <= 1.0f)
+			if (pair_int_distance(agent[id].position, obstacles[o_id].component[j]) <= 1)
 			{
 				agent[id].beside_obstacle = true;
+				agent[id].mBlockWay = false;
+			}
+			else if (agent[id].mBlockWay && agent[id].position != agent[id].block_pos && pair_int_distance(agent[id].position, obstacles[o_id].component[j]) <= 1.0f)
+			{
+				agent[id].beside_obstacle = true;
+				agent[id].mBlockWay = false;
 			}
 		}
 	}
@@ -2001,8 +2044,15 @@ void CS_CELLULAR_AUTOMATA::check_volunteer_position(){
 			{
 				if (agent[a_id].position == obstacles[id].moveDestination[k])
 				{
-					//cout << id << " " << j << " " << a_id << endl;
+					//cout << agent[a_id].position.first << " " << agent[a_id].position.second << endl;
+					//system("pause");
 					delete_volunteer(id, j, a_id);
+					cout << "delete " << j << endl;
+					//agent[a_id].block_pos = agent[id].position;
+					//agent[a_id].mBlockWay = true;
+					//agent[a_id].beside_obstacle = false;
+					//int mapID = getVolunteerMapID(id, j);
+					//computeVolunteerSFFNotConsiderBlockPosition(id, j);
 				}
 			}
 		}
@@ -2019,6 +2069,15 @@ void CS_CELLULAR_AUTOMATA::check_volunteer_position(){
 				//add_normal_obstacle(agent[i].blocked_obstacle_id);
 			}
 		}
+	}
+}
+
+void CS_CELLULAR_AUTOMATA::check_guider_position(){
+
+	for (unsigned int i = 0; i < mGuiderID.size(); i++)
+	{
+		int id = mGuiderID[i];
+		//if ()
 	}
 }
 
@@ -2112,7 +2171,7 @@ void CS_CELLULAR_AUTOMATA::check_obstacleMovement_blocked_auto(int o_id, Directi
 	}
 	obstacles[o_id].block = false;*/
 	bool movable = true;
-	for (int i = 0; i < (int)obstacles[o_id].component.size(); i++)
+	for (unsigned int i = 0; i < obstacles[o_id].component.size(); i++)
 	{
 		int a_id = obstacles[o_id].volunteer_id[i];
 		if (a_id == -1)
@@ -2124,16 +2183,13 @@ void CS_CELLULAR_AUTOMATA::check_obstacleMovement_blocked_auto(int o_id, Directi
 		{
 			if (agent[a_id].position == obstacles[o_id].moveDestination[j])
 			{
-				//cout << "agent position equal to destination position" << endl;
-				//system("pause");
-				delete_volunteer(o_id, i, a_id);
+				//delete_volunteer(o_id, i, a_id);
 				stock_ob = true;
+				break;
 			}
-			break;
 		}
 		if (stock_ob)
 			continue;
-		//cout << "obstacle movement " << !!check_obstacle_movement_block(o_id) << " volunteer movement " << !!check_volunteer_movement_block(a_id) << " move to low SFF " << !!check_moveToLowSFF(o_id) << endl;
 		if (check_obstacle_movement_block(o_id) || check_volunteer_movement_block(a_id) || !check_moveToLowSFF(o_id))
 		{
 			//obstacles[o_id].movable = true;
@@ -2149,13 +2205,11 @@ void CS_CELLULAR_AUTOMATA::check_obstacleMovement_blocked_auto(int o_id, Directi
 	obstacles[o_id].movable = movable;
 	if (obstacles[o_id].movable)
 		return;
-	//cout << "can't move" << endl;
-	float top = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX;
+	float top = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX, topRight = FLT_MAX, topLeft = FLT_MAX, downRight = FLT_MAX, downLeft = FLT_MAX;
 	int px0 = obstacles[o_id].component[0].first;
 	int pz0 = obstacles[o_id].component[0].second;
 	int desx0 = obstacles[o_id].moveDestination[0].first;
 	int desz0 = obstacles[o_id].moveDestination[0].second;
-	//cout << px0 << " " << pz0 << " " << desx0 << " " << desz0 << endl;
 	if (isValid(px0, pz0 + 1))
 		top = pair_int_distance(PAIR_INT(desx0, desz0), PAIR_INT(px0, pz0 + 1));
 	if (isValid(px0, pz0 - 1))
@@ -2164,35 +2218,94 @@ void CS_CELLULAR_AUTOMATA::check_obstacleMovement_blocked_auto(int o_id, Directi
 		left = pair_int_distance(PAIR_INT(desx0, desz0), PAIR_INT(px0 - 1, pz0));
 	if (isValid(px0 + 1, pz0))
 		right = pair_int_distance(PAIR_INT(desx0, desz0), PAIR_INT(px0 + 1, pz0));
-	float dis[4] = { top, down, left, right };
-	float sort_dis[4] = { top, down, left, right };
-	sort(sort_dis, sort_dis + 4);
-	/*for (int i = 0; i < 4; i++)
+	if (model->mNeighborType != 0)
 	{
-		cout << dis[i] << " ";
+		if (isValid(px0 + 1, pz0 + 1))
+			topRight = pair_int_distance(PAIR_INT(desx0, desz0), PAIR_INT(px0 + 1, pz0 + 1));
+		if (isValid(px0 - 1, pz0 + 1))
+			topLeft = pair_int_distance(PAIR_INT(desx0, desz0), PAIR_INT(px0 - 1, pz0 + 1));
+		if (isValid(px0 + 1, pz0 - 1))
+			downRight = pair_int_distance(PAIR_INT(desx0, desz0), PAIR_INT(px0 + 1, pz0 - 1));
+		if (isValid(px0 - 1, pz0 - 1))
+			downLeft = pair_int_distance(PAIR_INT(desx0, desz0), PAIR_INT(px0 - 1, pz0 - 1));
 	}
-	cout << endl;
-	for (int i = 0; i < 4; i++)
+	float dis[8] = { top, down, left, right, topRight, topLeft, downRight, downLeft };
+	float sort_dis[8] = { top, down, left, right, topRight, topLeft, downRight, downLeft };
+	sort(sort_dis, sort_dis + 8);
+	vector<PAIR_INT> overallPos;
+	for (unsigned int i = 0; i < obstacles[o_id].component.size(); i++)
 	{
-		cout << sort_dis[i] << " ";
+		int a_id = obstacles[o_id].volunteer_id[i];
+		int ox = obstacles[o_id].component[i].first;
+		int oz = obstacles[o_id].component[i].second;
+
+		if (a_id < 0)
+			continue;
 	}
-	cout << endl;*/
 	for (int i = 0; i < 2; i++)
 	{
 		bool movable_ = true;
-		int dir;
-		for (int j = 0; j < 4; j++)
+		/*int dir;
+		for (int j = 0; j < 8; j++)
 		{
 			if (sort_dis[i] == dis[j])
 			{
 				dir = j;
 			}
+		}*/
+		if (sort_dis[i] == top)
+		{
+			obstacles[o_id].direction = PAIR_INT(0, 1);
+			d = _up;
+		}
+		if (sort_dis[i] == right)
+		{
+			obstacles[o_id].direction = PAIR_INT(1, 0);
+			d = _right;
+		}
+		if (sort_dis[i] == down)
+		{
+			obstacles[o_id].direction = PAIR_INT(0, -1);
+			d = _down;
+		}
+		if (sort_dis[i] == left)
+		{
+			obstacles[o_id].direction = PAIR_INT(-1, 0);
+			d = _left;
+			break;
+		}
+		if (sort_dis[i] == topRight)
+		{
+			obstacles[o_id].direction = PAIR_INT(1, 1);
+			d = _topRight;
+			break;
+		}
+		if (sort_dis[i] == topLeft)
+		{
+			obstacles[o_id].direction = PAIR_INT(-1, 1);
+			d = _topLeft;
+			break;
+		}
+		if (sort_dis[i] == downRight)
+		{
+			obstacles[o_id].direction = PAIR_INT(1, -1);
+			d = _downRight;
+			break;
+		}
+		if (sort_dis[i] == downLeft)
+		{
+			obstacles[o_id].direction = PAIR_INT(-1, -1);
+			d = _downLeft;
+			break;
+		}
+		if (check_obstacle_movement_block(o_id))
+		{
+			movable_ = false;
+			break;
 		}
 		for (unsigned int j = 0; j < obstacles[o_id].component.size(); j++)
 		{
-			//if (i == obstacles[o_id].block_direction)
-			//	break;
-			if (sort_dis[i] == top)
+			/*if (sort_dis[i] == top)
 			{
 				obstacles[o_id].direction = PAIR_INT(0, 1);
 				d = _up;
@@ -2200,7 +2313,7 @@ void CS_CELLULAR_AUTOMATA::check_obstacleMovement_blocked_auto(int o_id, Directi
 			if (sort_dis[i] == right)
 			{
 				obstacles[o_id].direction = PAIR_INT(1, 0);
-			d = _right;
+				d = _right;
 			}
 			if (sort_dis[i] == down)
 			{
@@ -2213,16 +2326,42 @@ void CS_CELLULAR_AUTOMATA::check_obstacleMovement_blocked_auto(int o_id, Directi
 				d = _left;
 				break;
 			}
+			if (sort_dis[i] == topRight)
+			{
+				obstacles[o_id].direction = PAIR_INT(1, 1);
+				d = _topRight;
+				break;
+			}
+			if (sort_dis[i] == topLeft)
+			{
+				obstacles[o_id].direction = PAIR_INT(-1, 1);
+				d = _topLeft;
+				break;
+			}
+			if (sort_dis[i] == downRight)
+			{
+				obstacles[o_id].direction = PAIR_INT(1, -1);
+				d = _downRight;
+				break;
+			}
+			if (sort_dis[i] == downLeft)
+			{
+				obstacles[o_id].direction = PAIR_INT(-1, -1);
+				d = _downLeft;
+				break;
+			}*/
+			/*if (check_obstacle_movement_block(o_id))
+			{
+				movable_ = false;
+				break;
+			}*/
 			int a_id = obstacles[o_id].volunteer_id[i];
-			if (a_id == -1)
+			if (a_id < 0)
 				continue;
 			if (!agent[a_id].beside_obstacle)
 				continue;
-			//cout << "obstacle movement " << !!check_obstacle_movement_block(o_id) << " volunteer movement " << !!check_volunteer_movement_block(a_id) << " move to low SFF " << !!check_moveToLowSFF(o_id) << endl;
-			if (check_obstacle_movement_block(o_id) || check_volunteer_movement_block(a_id) || !check_moveToLowSFF(o_id))
+			if (check_volunteer_movement_block(a_id))/*|| !check_moveToLowSFF(o_id)*/
 			{
-				//obstacles[o_id].movable = true;
-				//obstacles[o_id].movable = false;
 				movable_ = false;
 				break;
 			}
@@ -2230,7 +2369,6 @@ void CS_CELLULAR_AUTOMATA::check_obstacleMovement_blocked_auto(int o_id, Directi
 		obstacles[o_id].movable = movable_;
 		if (obstacles[o_id].movable)
 		{
-			//cout << "can move " << obstacles[o_id].direction.first << " " << obstacles[o_id].direction.second << endl;
 			return;
 		}
 	}
@@ -2539,7 +2677,6 @@ void CS_CELLULAR_AUTOMATA::reset(){
 	cell_manager.specific_max_sFF.resize(obstacles.size());
 	compute_staticFF();
 	compute_clean_sFF();
-
 	int count = 0;
 	for (unsigned int i = 0; i < obstacles.size(); i++)
 	{
@@ -2705,25 +2842,27 @@ double CS_CELLULAR_AUTOMATA::get_probability(int x, int y, int agent_num){
 	//	return exp((double)model->kd * cell[x][y].dFF) * exp((double)-model->ks * cell[x][y].specific_sFF[o_id]) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
 	//}
 	float anxietyEffect = 1 - agent[agent_num].anxiety;
+	float sawExit = 1.0f;
 	if (agent[agent_num].compressive_leader && anxietyEffect < agent[agent_num].psychology.leadership)
 		anxietyEffect = agent[agent_num].psychology.leadership;
-	if (anxietyEffect == 0)
-		anxietyEffect = 0.1f;
+	if (anxietyEffect < 0.3f)
+		anxietyEffect = 0.3f;
+	// 如果agent看到出口而且出口沒被obstacle擋住，則agent將不再受DFF影響
+	if (agent[agent_num].mSawExit)
+	{
+		anxietyEffect = 1;
+		sawExit = 0;
+	}
 	if (agent[agent_num].blocked_obstacle_id == -1)
 	{
-		return exp((double)-model->kd * cell[x][y].dFF) * exp((double)-model->ks * (cell[x][y].sFF) * anxietyEffect) * exp((double)-33 * cell[x][y].aFF) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
+		return exp((double)-model->kd * cell[x][y].dFF * sawExit) * exp((double)-model->ks * (cell[x][y].sFF) * anxietyEffect) * exp((double)-model->ka * cell[x][y].aFF) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
 	}
 	int FloorFieldMapID = (int)decodingFloorFieldID(agent[agent_num].blockByExit);
-	//if (agent_num == 467)
-	//{
-	//	cout << cell[x][y].aFF << endl;
-	//	cout << x << " " << y << " " << exp((double)model->kd * cell[x][y].dFF) * exp((double)-model->ks * cell[x][y].special_sFF[FloorFieldMapID]) * exp((double)-33 * cell[x][y].aFF) << endl;//* (1 - cell[x][y].occupied) << endl;//* cell[x][y].obstacle_ << endl;
-	//}
-	return exp((double)-model->kd * cell[x][y].dFF) * exp((double)-model->ks * cell[x][y].special_sFF[FloorFieldMapID] * anxietyEffect) * exp((double)-33 * cell[x][y].aFF) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
+	return exp((double)-model->kd * cell[x][y].dFF * sawExit) * exp((double)-model->ks * cell[x][y].special_sFF[FloorFieldMapID] * anxietyEffect) * exp((double)-model->ka * cell[x][y].aFF) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
 	
 	//return exp((double)model->kd * cell[x][y].dFF) * exp((double)-model->ks * cell[x][y].sFF) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
 }
-// 
+
 float CS_CELLULAR_AUTOMATA::get_probability_volunteer(int x, int z, int agent_num){
 
 	float distanceToTarget;
@@ -2750,12 +2889,34 @@ float CS_CELLULAR_AUTOMATA::get_probability_volunteer(int x, int z, int agent_id
 	{
 		id += obstacles[i].component.size();
 	}
+	// id非零
 	if (!!id)
 		id--;
 	//cout << agent_id << endl;
 	//cout << o_id << ", " << com_id << endl;
 	id += com_id;
-	return exp(-model->ks * volunteer_distance_map[id][x][z].sFF) * (1 - cell[x][z].occupied) * cell[x][z].obstacle_;
+	return exp((double)-model->ks * volunteer_distance_map[id][x][z].sFF) * (1 - cell[x][z].occupied) * cell[x][z].obstacle_;
+}
+
+int CS_CELLULAR_AUTOMATA::getVolunteerMapID(int o_id, int com_id){
+
+	int id = 0;
+	for (int i = 0; i < o_id; i++)
+	{
+		id += obstacles[i].component.size();
+	}
+	// id非零
+	if (!!id)
+		id--;
+	id += com_id;
+	return id;
+}
+
+float CS_CELLULAR_AUTOMATA::get_probability_guider(int id, int x, int z){
+
+	if (!isValid(x, z))
+		return 0;
+	return exp((double)-model->ks * pair_int_distance(PAIR_INT(x, z), agent[id].guide_pos)) * (1 - cell[x][z].occupied) * cell[x][z].obstacle_;
 }
 
 float CS_CELLULAR_AUTOMATA::get_probability_obstacle(int x, int z, int id){
@@ -2804,6 +2965,22 @@ float CS_CELLULAR_AUTOMATA::get_inertia(int x, int y, int agent_number){
 		break;
 	case fromTop:
 		if (agent[agent_number].position.second == y + 1)
+			pi = model->ki;
+		break;
+	case fromRightTop:
+		if (agent[agent_number].position.first == x + 1 && agent[agent_number].position.second == y + 1)
+			pi = model->ki;
+		break;
+	case fromLeftTop:
+		if (agent[agent_number].position.first == x - 1 && agent[agent_number].position.second == y + 1)
+			pi = model->ki;
+		break;
+	case fromRightBottom:
+		if (agent[agent_number].position.first == x + 1 && agent[agent_number].position.second == y - 1)
+			pi = model->ki;
+		break;
+	case fromLeftBottom:
+		if (agent[agent_number].position.first == x - 1 && agent[agent_number].position.second == y - 1)
 			pi = model->ki;
 		break;
 	}
@@ -2857,6 +3034,38 @@ float CS_CELLULAR_AUTOMATA::get_leader_inertia(int x, int y, int agent_num){
 		if (arrival){
 			if (agent[agent[agent_num].leader_id].escape_position.second == y + 1)
 				pi = model->ki;
+		}
+		break;
+	case fromRightTop:
+		if (!arrival && agent[agent[agent_num].leader_id].position.first == x + 1 && agent[agent[agent_num].leader_id].position.second == y + 1){
+			pi = model->ki;
+		}
+		if (arrival && agent[agent[agent_num].leader_id].escape_position.first == x + 1 && agent[agent[agent_num].leader_id].escape_position.second == y + 1){
+			pi = model->ki;
+		}
+		break;
+	case fromLeftTop:
+		if (!arrival && agent[agent[agent_num].leader_id].position.first == x - 1 && agent[agent[agent_num].leader_id].position.second == y + 1){
+			pi = model->ki;
+		}
+		if (arrival && agent[agent[agent_num].leader_id].escape_position.first == x - 1 && agent[agent[agent_num].leader_id].escape_position.second == y + 1){
+			pi = model->ki;
+		}
+		break;
+	case fromRightBottom:
+		if (!arrival && agent[agent[agent_num].leader_id].position.first == x + 1 && agent[agent[agent_num].leader_id].position.second == y - 1){
+			pi = model->ki;
+		}
+		if (arrival && agent[agent[agent_num].leader_id].escape_position.first == x + 1 && agent[agent[agent_num].leader_id].escape_position.second == y - 1){
+			pi = model->ki;
+		}
+		break;
+	case fromLeftBottom:
+		if (!arrival && agent[agent[agent_num].leader_id].position.first == x - 1 && agent[agent[agent_num].leader_id].position.second == y - 1){
+			pi = model->ki;
+		}
+		if (arrival && agent[agent[agent_num].leader_id].escape_position.first == x - 1 && agent[agent[agent_num].leader_id].escape_position.second == y - 1){
+			pi = model->ki;
 		}
 		break;
 	}
@@ -2930,8 +3139,21 @@ bool CS_CELLULAR_AUTOMATA::isValid(int x, int y){
 	return true;
 }
 
+bool CS_CELLULAR_AUTOMATA::isGuiderValidArea(int o_id, int x, int z){
+
+	float min_dis = FLT_MAX;
+	for (unsigned int i = 0; i < obstacles[o_id].component.size(); i++)
+	{
+		if (pair_int_distance(obstacles[o_id].component[i], PAIR_INT(x, z)) <= GUIDE_DIS)
+			return true;
+	}
+	return false;
+}
+
 bool CS_CELLULAR_AUTOMATA::isBlock(int x, int z){
 
+	if (cell[x][z].cell_type == 3)
+		return true;
 	if (!cell[x][z].obstacle)
 		return false;
 	int o_id = cell[x][z].obstacle_id;
@@ -2954,7 +3176,7 @@ bool CS_CELLULAR_AUTOMATA::isBlock(int x, int z, int o){
 // check agent's move direction is opposite to leader's whether or not
 bool CS_CELLULAR_AUTOMATA::opposite_direction(int agent_num, float distancetoleader){
 
-	float up = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX;
+	float up = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX, topRight = FLT_MAX, topLeft = FLT_MAX, downRight = FLT_MAX, downLeft = FLT_MAX;
 	if (isValid(agent[agent_num].position.first, agent[agent_num].position.second + 1))
 	{
 		up = distanceToLeader(agent[agent_num].position.first, agent[agent_num].position.second + 1, agent_num);
@@ -2971,8 +3193,24 @@ bool CS_CELLULAR_AUTOMATA::opposite_direction(int agent_num, float distancetolea
 	{
 		right = distanceToLeader(agent[agent_num].position.first + 1, agent[agent_num].position.second, agent_num);
 	}
-	float distance[4] = { up, down, left, right };
-	sort(distance, distance + 4);
+	if (isValid(agent[agent_num].position.first + 1, agent[agent_num].position.second + 1))
+	{
+		up = distanceToLeader(agent[agent_num].position.first + 1, agent[agent_num].position.second + 1, agent_num);
+	}
+	if (isValid(agent[agent_num].position.first - 1, agent[agent_num].position.second + 1))
+	{
+		down = distanceToLeader(agent[agent_num].position.first - 1, agent[agent_num].position.second + 1, agent_num);
+	}
+	if (isValid(agent[agent_num].position.first + 1, agent[agent_num].position.second - 1))
+	{
+		left = distanceToLeader(agent[agent_num].position.first + 1, agent[agent_num].position.second - 1, agent_num);
+	}
+	if (isValid(agent[agent_num].position.first - 1, agent[agent_num].position.second - 1))
+	{
+		right = distanceToLeader(agent[agent_num].position.first - 1, agent[agent_num].position.second - 1, agent_num);
+	}
+	float distance[8] = { up, down, left, right, topRight, topLeft, downRight, downLeft};
+	sort(distance, distance + 8);
 
 	for (int i = 0; i < 2; i++)
 	{
@@ -2985,7 +3223,7 @@ bool CS_CELLULAR_AUTOMATA::opposite_direction(int agent_num, float distancetolea
 // check agent's move direction is opposite to obstacle's whether or not
 bool CS_CELLULAR_AUTOMATA::opposite_direction_toObstacle(int agent_num, float distancetoobstacle){
 
-	float up = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX;
+	float up = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX, topRight = FLT_MAX, topLeft = FLT_MAX, downRight = FLT_MAX, downLeft = FLT_MAX;
 	if (isValid(agent[agent_num].position.first, agent[agent_num].position.second + 1))
 	{
 		if (agent[agent_num].beside_obstacle)
@@ -3038,8 +3276,60 @@ bool CS_CELLULAR_AUTOMATA::opposite_direction_toObstacle(int agent_num, float di
 				+ pow(agent[agent_num].position.second - removed_obstacles[agent[agent_num].push_obstacle_id].position.second, 2));
 		}
 	}
-	float distance[4] = { up, down, left, right };
-	sort(distance, distance + 4);
+	if (isValid(agent[agent_num].position.first + 1, agent[agent_num].position.second + 1))
+	{
+		if (agent[agent_num].beside_obstacle)
+		{
+			up = (float)sqrt(pow(agent[agent_num].position.first + 1 - removed_obstacles[agent[agent_num].push_obstacle_id].destination.first, 2)
+				+ pow((agent[agent_num].position.second + 1) - removed_obstacles[agent[agent_num].push_obstacle_id].destination.second, 2));
+		}
+		if (!agent[agent_num].beside_obstacle)
+		{
+			up = (float)sqrt(pow(agent[agent_num].position.first + 1 - removed_obstacles[agent[agent_num].push_obstacle_id].position.first, 2)
+				+ pow((agent[agent_num].position.second + 1) - removed_obstacles[agent[agent_num].push_obstacle_id].position.second, 2));
+		}
+	}
+	if (isValid(agent[agent_num].position.first - 1, agent[agent_num].position.second + 1))
+	{
+		if (agent[agent_num].beside_obstacle)
+		{
+			down = (float)sqrt(pow(agent[agent_num].position.first - 1 - removed_obstacles[agent[agent_num].push_obstacle_id].destination.first, 2)
+				+ pow((agent[agent_num].position.second + 1) - removed_obstacles[agent[agent_num].push_obstacle_id].destination.second, 2));
+		}
+		if (!agent[agent_num].beside_obstacle)
+		{
+			down = (float)sqrt(pow(agent[agent_num].position.first - 1 - removed_obstacles[agent[agent_num].push_obstacle_id].position.first, 2)
+				+ pow((agent[agent_num].position.second + 1) - removed_obstacles[agent[agent_num].push_obstacle_id].position.second, 2));
+		}
+	}
+	if (isValid(agent[agent_num].position.first + 1, agent[agent_num].position.second - 1))
+	{
+		if (agent[agent_num].beside_obstacle)
+		{
+			left = (float)sqrt(pow((agent[agent_num].position.first + 1) - removed_obstacles[agent[agent_num].push_obstacle_id].destination.first, 2)
+				+ pow(agent[agent_num].position.second - 1 - removed_obstacles[agent[agent_num].push_obstacle_id].destination.second, 2));
+		}
+		if (!agent[agent_num].beside_obstacle)
+		{
+			left = (float)sqrt(pow((agent[agent_num].position.first + 1) - removed_obstacles[agent[agent_num].push_obstacle_id].position.first, 2)
+				+ pow(agent[agent_num].position.second - 1 - removed_obstacles[agent[agent_num].push_obstacle_id].position.second, 2));
+		}
+	}
+	if (isValid(agent[agent_num].position.first - 1, agent[agent_num].position.second - 1))
+	{
+		if (agent[agent_num].beside_obstacle)
+		{
+			right = (float)sqrt(pow((agent[agent_num].position.first - 1) - removed_obstacles[agent[agent_num].push_obstacle_id].destination.first, 2)
+				+ pow(agent[agent_num].position.second - 1 - removed_obstacles[agent[agent_num].push_obstacle_id].destination.second, 2));
+		}
+		if (!agent[agent_num].beside_obstacle)
+		{
+			right = (float)sqrt(pow((agent[agent_num].position.first - 1) - removed_obstacles[agent[agent_num].push_obstacle_id].position.first, 2)
+				+ pow(agent[agent_num].position.second - 1 - removed_obstacles[agent[agent_num].push_obstacle_id].position.second, 2));
+		}
+	}
+	float distance[8] = { up, down, left, right, topRight, topLeft, downRight, downLeft };
+	sort(distance, distance + 8);
 	for (int i = 0; i < 1; i++)
 	{
 		if (distancetoobstacle == distance[i])
@@ -3051,12 +3341,9 @@ bool CS_CELLULAR_AUTOMATA::opposite_direction_toObstacle(int agent_num, float di
 // check volunteer' move direction is opposite to obstacle's place whether or not
 bool CS_CELLULAR_AUTOMATA::opposite_direction_toOb(int agent_id, float distanceToOb, int com_id, int o_id){
 
-	float up = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX;
+	float up = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX, topRight = FLT_MAX, topLeft = FLT_MAX, downRight = FLT_MAX, downLeft = FLT_MAX;
 	int x = agent[agent_id].position.first;
 	int z = agent[agent_id].position.second;
-	//cout << "agent_id: " << agent_id << endl;
-	//cout << "com_id: " << com_id << endl;
-	//cout << "o_id:" << o_id << endl;
 	if (isValid(x, z + 1))
 	{
 		if ((1 - cell[x][z + 1].occupied) * cell[x][z + 1].obstacle_ == 1)
@@ -3077,16 +3364,28 @@ bool CS_CELLULAR_AUTOMATA::opposite_direction_toOb(int agent_id, float distanceT
 		if ((1 - cell[x + 1][z].occupied) * cell[x + 1][z].obstacle_ == 1)
 			right = (float)sqrt(pow(x + 1 - obstacles[o_id].component[com_id].first, 2) + pow(z - obstacles[o_id].component[com_id].second, 2));
 	}
-	/*cout << "top: " << up << endl;
-	cout << "down: " << down << endl;
-	cout << "left: " << left << endl;
-	cout << "right: " << right << endl;*/
-	float distance[4] = { up, down, left, right };
-	sort(distance, distance + 4);
-	//cout << "shortest distance: " << distance[0] << endl << endl;
-	/*cout << "agent id: " << agent_id << endl;
-	cout << "distancetoob: " << distanceToOb << endl;
-	cout << "shortest distance: " << distance[0] << endl << endl;*/
+	if (isValid(x + 1, z + 1))
+	{
+		if ((1 - cell[x + 1][z + 1].occupied) * cell[x + 1][z + 1].obstacle_ == 1)
+			up = (float)sqrt(pow(x + 1 - obstacles[o_id].component[com_id].first, 2) + pow(z + 1 - obstacles[o_id].component[com_id].second, 2));
+	}
+	if (isValid(x - 1, z + 1))
+	{
+		if ((1 - cell[x - 1][z + 1].occupied) * cell[x - 1][z + 1].obstacle_ == 1)
+			down = (float)sqrt(pow(x - 1 - obstacles[o_id].component[com_id].first, 2) + pow(z + 1 - obstacles[o_id].component[com_id].second, 2));
+	}
+	if (isValid(x + 1, z - 1))
+	{
+		if ((1 - cell[x + 1][z - 1].occupied) * cell[x + 1][z - 1].obstacle_ == 1)
+			left = (float)sqrt(pow(x + 1 - obstacles[o_id].component[com_id].first, 2) + pow(z - 1 - obstacles[o_id].component[com_id].second, 2));
+	}
+	if (isValid(x - 1, z - 1))
+	{
+		if ((1 - cell[x - 1][z - 1].occupied) * cell[x - 1][z - 1].obstacle_ == 1)
+			right = (float)sqrt(pow(x - 1 - obstacles[o_id].component[com_id].first, 2) + pow(z - 1 - obstacles[o_id].component[com_id].second, 2));
+	}
+	float distance[8] = { up, down, left, right, topRight, topLeft, downRight, downLeft };
+	sort(distance, distance + 8);
 	for (int i = 0; i < 1; i++)
 	{
 		if (distanceToOb == distance[i])
@@ -3098,7 +3397,7 @@ bool CS_CELLULAR_AUTOMATA::opposite_direction_toOb(int agent_id, float distanceT
 
 bool CS_CELLULAR_AUTOMATA::opposite_direction_toDestination(int id, float distanceToDestination){
 
-	float up = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX;
+	float up = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX, topRight = FLT_MAX, topLeft = FLT_MAX, downRight = FLT_MAX, downLeft = FLT_MAX;
 	int o_x, o_z, d_x, d_z;
 	o_x = removed_obstacles[id].position.first;
 	o_z = removed_obstacles[id].position.second;
@@ -3120,8 +3419,24 @@ bool CS_CELLULAR_AUTOMATA::opposite_direction_toDestination(int id, float distan
 	{
 		right = (float)sqrt(pow(o_x + 1 - d_x, 2) + pow(o_z - d_z, 2));
 	}
-	float distance[4] = { up, down, left, right };
-	sort(distance, distance + 4);
+	if (isValid(o_x + 1, o_z + 1))
+	{
+		up = (float)sqrt(pow(o_x + 1 - d_x, 2) + pow(o_z + 1 - d_z, 2));
+	}
+	if (isValid(o_x - 1, o_z + 1))
+	{
+		down = (float)sqrt(pow(o_x - 1 - d_x, 2) + pow(o_z + 1 - d_z, 2));
+	}
+	if (isValid(o_x + 1, o_z - 1))
+	{
+		left = (float)sqrt(pow(o_x + 1 - d_x, 2) + pow(o_z - 1 - d_z, 2));
+	}
+	if (isValid(o_x - 1, o_z - 1))
+	{
+		right = (float)sqrt(pow(o_x - 1 - d_x, 2) + pow(o_z - 1 - d_z, 2));
+	}
+	float distance[8] = { up, down, left, right, topRight, topLeft, downRight, downLeft };
+	sort(distance, distance + 8);
 	for (int i = 0; i < 1; i++)
 	{
 		if (distanceToDestination == distance[i])
@@ -3754,7 +4069,7 @@ void CS_CELLULAR_AUTOMATA::reset_OccupiedAgentID(){
 		for (int j = 0; j < model->size; j++)
 		{
 			cell[i][j].occupied_number = 0;
-			for (int k = 0; k < 4; k++)
+			for (int k = 0; k < 8; k++)
 			{
 				cell[i][j].m_OccupantID[k] = -1;
 			}
@@ -3890,7 +4205,7 @@ void CS_CELLULAR_AUTOMATA::check_sFF(){
 
 void CS_CELLULAR_AUTOMATA::find_direction_towardToObstacleDestination(int o_id, Direction& d){
 
-	float up = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX;
+	float up = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX, topRight = FLT_MAX, topLeft = FLT_MAX, downRight = FLT_MAX, downLeft = FLT_MAX;
 	int x, z, des_x, des_z;
 	pair<int, int> destination;
 	obstacles[o_id].final_clicked_o_id = 0;
@@ -3926,13 +4241,32 @@ void CS_CELLULAR_AUTOMATA::find_direction_towardToObstacleDestination(int o_id, 
 	{
 		right = (float)sqrt(pow(x + 1 - des_x, 2) + pow(z - des_z, 2));
 	}
-	float distance[4] = { up, down, left, right };
+	if (model->mNeighborType != 0)
+	{
+		if (isValid(x + 1, z + 1))
+		{
+			topRight = (float)sqrt(pow(x + 1 - des_x, 2) + pow(z + 1 - des_z, 2));
+		}
+		if (isValid(x - 1, z + 1))
+		{
+			topLeft = (float)sqrt(pow(x - 1 - des_x, 2) + pow(z + 1 - des_z, 2));
+		}
+		if (isValid(x + 1, z - 1))
+		{
+			downRight = (float)sqrt(pow(x + 1 - des_x, 2) + pow(z - 1 - des_z, 2));
+		}
+		if (isValid(x - 1, z - 1))
+		{
+			downLeft = (float)sqrt(pow(x - 1 - des_x, 2) + pow(z - 1 - des_z, 2));
+		}
+	}
+	float distance[8] = { up, down, left, right, topRight, topLeft, downRight, downLeft };
 	/*for (int i = 0; i < 4; i++)
 	{
 		cout << distance[i] << " ";
 	}
 	cout << endl;*/
-	sort(distance, distance + 4);
+	sort(distance, distance + 8);
 	/*for (int i = 0; i < 4; i++)
 	{
 		cout << distance[i] << " ";
@@ -3942,36 +4276,56 @@ void CS_CELLULAR_AUTOMATA::find_direction_towardToObstacleDestination(int o_id, 
 	{
 		if (abs(up - distance[i]) < 0.000001f)
 		{
-			//cout << "up " << up << endl;
 			d = _up;
-			obstacles[o_id].direction = pair<int, int>(0, 1);
+			obstacles[o_id].direction = PAIR_INT(0, 1);
 			break;
 		}
 		else if (abs(down - distance[i]) < 0.000001f)
 		{
-			//cout << "down " << down << endl;
 			d = _down;
-			obstacles[o_id].direction = pair<int, int>(0, -1);
+			obstacles[o_id].direction = PAIR_INT(0, -1);
 			break;
 		}
 		else if (abs(left - distance[i]) < 0.000001f)
 		{
-			//cout << "left " << left << endl;
 			d = _left;
-			obstacles[o_id].direction = pair<int, int>(-1, 0);
+			obstacles[o_id].direction = PAIR_INT(-1, 0);
 			break;
 		}
 		else if (abs(right - distance[i]) < 0.000001f)
 		{
-			//cout << "right " << right << endl;
 			d = _right;
-			obstacles[o_id].direction = pair<int, int>(1, 0);
+			obstacles[o_id].direction = PAIR_INT(1, 0);
+			break;
+		}
+		else if (abs(topRight - distance[i]) < 0.000001f)
+		{
+			d = _topRight;
+			obstacles[o_id].direction = PAIR_INT(1, 1);
+			break;
+		}
+		else if (abs(topLeft - distance[i]) < 0.000001f)
+		{
+			d = _topLeft;
+			obstacles[o_id].direction = PAIR_INT(-1, 1);
+			break;
+		}
+		else if (abs(downRight - distance[i]) < 0.000001f)
+		{
+			d = _downRight;
+			obstacles[o_id].direction = PAIR_INT(1, -1);
+			break;
+		}
+		else if (abs(downLeft - distance[i]) < 0.000001f)
+		{
+			d = _downLeft;
+			obstacles[o_id].direction = PAIR_INT(-1, -1);
 			break;
 		}
 		else
 		{
 			d = local;
-			obstacles[o_id].direction = pair<int, int>(0, 0);
+			obstacles[o_id].direction = PAIR_INT(0, 0);
 		}
 	}
 	return;
@@ -4024,7 +4378,7 @@ PAIR_INT CS_CELLULAR_AUTOMATA::agent_avoid_obstacle(int a_id){
 	cout << "agent_" << a_id << " avoid the obstacle." << endl;
 	int o_id = agent[a_id].close_obstacle_id;
 	int com_id = agent[a_id].close_obstacle_com_id;
-	float top = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX;
+	float top = FLT_MAX, down = FLT_MAX, left = FLT_MAX, right = FLT_MAX, topRight = FLT_MAX, topLeft = FLT_MAX, downRight = FLT_MAX, downLeft = FLT_MAX;
 	int x = agent[a_id].position.first;
 	int z = agent[a_id].position.second;
 	if (isValid(x, z + 1) && cell[x][z + 1].occupied == 0 && !cell[x][z + 1].obstacle)
@@ -4055,13 +4409,41 @@ PAIR_INT CS_CELLULAR_AUTOMATA::agent_avoid_obstacle(int a_id){
 		//right = pair_int_distance(PAIR_INT(x + 1, z), PAIR_INT(ob_x, ob_z));
 		right = cell[x + 1][z].sFF;
 	}
-	PAIR_INT direction[4] = { PAIR_INT(x, z + 1), PAIR_INT(x, z - 1), PAIR_INT(x - 1, z), PAIR_INT(x + 1, z) };
-	float buffer[4] = { top, down, left, right };
-	float distance[4] = { top, down, left, right };
-	sort(buffer, buffer + 4);
+	if (isValid(x + 1, z + 1) && cell[x + 1][z + 1].occupied == 0 && !cell[x + 1][z + 1].obstacle)
+	{
+		int ob_x = obstacles[o_id].component[com_id].first;
+		int ob_z = obstacles[o_id].component[com_id].second;
+		//top = pair_int_distance(PAIR_INT(x, z + 1), PAIR_INT(ob_x, ob_z));
+		top = cell[x + 1][z + 1].sFF;
+	}
+	if (isValid(x - 1, z + 1) && cell[x - 1][z + 1].occupied == 0 && !cell[x - 1][z + 1].obstacle)
+	{
+		int ob_x = obstacles[o_id].component[com_id].first;
+		int ob_z = obstacles[o_id].component[com_id].second;
+		//down = pair_int_distance(PAIR_INT(x, z - 1), PAIR_INT(ob_x, ob_z));
+		down = cell[x - 1][z + 1].sFF;
+	}
+	if (isValid(x + 1, z - 1) && cell[x + 1][z - 1].occupied == 0 && !cell[x + 1][z - 1].obstacle)
+	{
+		int ob_x = obstacles[o_id].component[com_id].first;
+		int ob_z = obstacles[o_id].component[com_id].second;
+		//left = pair_int_distance(PAIR_INT(x - 1, z), PAIR_INT(ob_x, ob_z));
+		left = cell[x + 1][z - 1].sFF;
+	}
+	if (isValid(x - 1, z - 1) && cell[x - 1][z - 1].occupied == 0 && !cell[x - 1][z - 1].obstacle)
+	{
+		int ob_x = obstacles[o_id].component[com_id].first;
+		int ob_z = obstacles[o_id].component[com_id].second;
+		//right = pair_int_distance(PAIR_INT(x + 1, z), PAIR_INT(ob_x, ob_z));
+		right = cell[x - 1][z - 1].sFF;
+	}
+	PAIR_INT direction[8] = { PAIR_INT(x, z + 1), PAIR_INT(x, z - 1), PAIR_INT(x - 1, z), PAIR_INT(x + 1, z), PAIR_INT(x + 1, z + 1), PAIR_INT(x - 1, z + 1), PAIR_INT(x + 1, z - 1), PAIR_INT(x - 1, z - 1) };
+	float buffer[8] = { top, down, left, right, topRight, topLeft, downRight, downLeft };
+	float distance[8] = { top, down, left, right, topRight, topLeft, downRight, downLeft };
+	sort(buffer, buffer + 8);
 	if (buffer[0] != FLT_MAX)
 	{
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < 8; i++)
 		{
 			if (buffer[0] == distance[i])
 			{
@@ -4768,8 +5150,8 @@ void CS_CELLULAR_AUTOMATA::assignColorProportion(){
 			mColorProportion[3] = aa[3 - i];
 		}
 	}
-	//cout << a << endl << b << endl << c << endl << d << endl;
-	//cout << mColorProportion[0] << endl << mColorProportion[1] << endl << mColorProportion[2] << endl << mColorProportion[3] << endl;
+	cout << a << endl << b << endl << c << endl << d << endl;
+	cout << mColorProportion[0] << endl << mColorProportion[1] << endl << mColorProportion[2] << endl << mColorProportion[3] << endl;
 }
 
 void CS_CELLULAR_AUTOMATA::printDebugInformation(){
@@ -4790,5 +5172,39 @@ void CS_CELLULAR_AUTOMATA::printDebugInformation(){
 		}
 		cout << "--------------------------------------------------" << endl;*/
 	}
-	//cout << getTimeInfluence(1) << endl;
+}
+
+void CS_CELLULAR_AUTOMATA::changeNeighborType(){
+
+	model->mNeighborType = !model->mNeighborType;
+	compute_staticFF();
+	compute_clean_sFF();
+	for (int j = 0; j < (int)obstacles.size(); j++)
+	{
+		for (int k = 0; k < (int)obstacles[j].component.size(); k++)
+		{
+			compute_volunteer_staticFF(j, k);
+		}
+	}
+	int *exit_block = new int[mExit.size()];
+	if (obstacles.size() > 0)
+	{
+		for (int j = 0; j < pow(2, mExit.size()); j++)
+		{
+			int value = j;
+			for (int k = mExit.size() - 1; k >= 0; k--)
+			{
+				if (value >= pow(2, k))
+				{
+					value -= (int)pow(2, k);
+					exit_block[k] = 1;
+				}
+				else
+				{
+					exit_block[k] = 0;
+				}
+			}
+			computeNewMapWithoutExit(exit_block);
+		}
+	}
 }

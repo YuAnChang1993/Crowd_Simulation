@@ -240,17 +240,18 @@ void CS_CELLULAR_AUTOMATA::draw_colorTable(){
 	travelLength.addEntry(Rv*0.0, vector3(0.0, 0.0, 1.0));
 	//travelLength.addEntry(Rv*1.0, vector3(0.0, 0.33, 1.0));
 	//travelLength.addEntry(Rv*2.0, vector3(0.0, 0.66, 1.0));
-	travelLength.addEntry(Rv*(mColorProportion[0]) * 10, vector3(0.0, 1.0, 1.0));
+	//travelLength.addEntry(Rv*(mColorProportion[0]) * 10, vector3(0.0, 1.0, 1.0));
 	//travelLength.addEntry(Rv*3.0, vector3(0.0, 1.0, 1.0));
 	//travelLength.addEntry(Rv*4.0, vector3(0.0, 1.0, 0.0));
 	//travelLength.addEntry(Rv*5.0, vector3(0.0, 1.0, 0.0));
 	//travelLength.addEntry(Rv*6.0, vector3(1.0, 1.0, 0.0));
 	//travelLength.addEntry(Rv*7.0, vector3(1.0, 0.75, 0.0));
-	travelLength.addEntry(Rv*(mColorProportion[0] + mColorProportion[1] + mColorProportion[2]) * 10, vector3(1.0, 1.0, 0.0));
+	travelLength.addEntry(Rv*5.0f, vector3(0.0, 1.0, 1.0));
+	//travelLength.addEntry(Rv*(mColorProportion[0] + mColorProportion[1] + mColorProportion[2]) * 10, vector3(1.0, 1.0, 0.0));
 	//travelLength.addEntry(Rv*8.0, vector3(1.0, 0.5, 0.0));
-	travelLength.addEntry(Rv*12.0, vector3(1.0, 0.0, 0.0));
-	//travelLength.addEntry(Rv*12.0, vector3(0.5, 0.0, 0.0));
-
+	travelLength.addEntry(Rv*10.0f, vector3(1.0, 1.0, 0.0));
+	travelLength.addEntry(Rv*15.0, vector3(1.0, 0.0, 0.0));
+	travelLength.addEntry(Rv*20.0, vector3(0.5, 0.0, 0.0));
 	for (int i = 0; i < size; i++)
 	{
 		for (int j = 0; j < size; j++)
@@ -263,6 +264,7 @@ void CS_CELLULAR_AUTOMATA::draw_colorTable(){
 			ogl_drawFilledRectXZ((i - size / 2) * SCALER - OFFSET, (i + 1 - size / 2) * SCALER - OFFSET, (j - size / 2) * SCALER - OFFSET, (j + 1 - size / 2) * SCALER - OFFSET, 1);
 		}
 	}
+	draw_obstacle();
 }
 
 void CS_CELLULAR_AUTOMATA::draw_dFF_colorTable(){
@@ -596,7 +598,6 @@ void CS_CELLULAR_AUTOMATA::draw_agent_willness(){
 void CS_CELLULAR_AUTOMATA::draw_obstacle(){
 
 	int size = model->size;
-
 	for (int i = 0; i < size; i++){
 		for (int j = 0; j < size; j++){
 			if (cell[i][j].obstacle)
@@ -608,6 +609,41 @@ void CS_CELLULAR_AUTOMATA::draw_obstacle(){
 			{
 				//glColor3f(0.0f, 0.5f, 0.0f);
 				//ogl_drawFilledRectXZ((i - size / 2) * SCALER - OFFSET, (i + 1 - size / 2) * SCALER - OFFSET, (j - size / 2) * SCALER - OFFSET, (j + 1 - size / 2) * SCALER - OFFSET, -0.1f);
+			}
+		}
+	}
+	draw_wall();
+	draw_obstacle_destination();
+}
+
+void CS_CELLULAR_AUTOMATA::draw_wall(){
+
+	int size = model->size;
+	glColor3f(0, 0, 0);
+	for (auto &w : wall){
+		if (w.first == -1 || w.second == -1 || w.first == model->size || w.second == model->size)
+			continue;
+		ogl_drawFilledRectXZ((w.first - size / 2) * SCALER - OFFSET, (w.first + 1 - size / 2) * SCALER - OFFSET, (w.second - size / 2) * SCALER - OFFSET, (w.second + 1 - size / 2) * SCALER - OFFSET, -0.1f);
+	}
+}
+
+void CS_CELLULAR_AUTOMATA::draw_obstacle_destination(){
+
+	int size = model->size;
+	for (unsigned int i = 0; i < blocked_obstacles.size(); i++)
+	{
+		int o_id = blocked_obstacles[i];
+		for (unsigned int j = 0; j < obstacles[o_id].volunteer_id.size(); j++)
+		{
+			int a_id = obstacles[o_id].volunteer_id[j];
+			if (a_id != -1)
+			{
+				for (unsigned int k = 0; k < obstacles[o_id].moveDestination.size(); k++)
+				{
+					PAIR_INT pos = obstacles[o_id].moveDestination[k];
+					glColor3f(0.5f, 0.0f, 0.0f);
+					ogl_drawUnFilledRectXZ((pos.first - size / 2) * SCALER - OFFSET, (pos.first + 1 - size / 2) * SCALER - OFFSET, (pos.second - size / 2) * SCALER - OFFSET, (pos.second + 1 - size / 2) * SCALER - OFFSET, -0.1f);
+				}
 			}
 		}
 	}
