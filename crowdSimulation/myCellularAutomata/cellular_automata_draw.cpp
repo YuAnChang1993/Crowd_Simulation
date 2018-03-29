@@ -236,7 +236,7 @@ void CS_CELLULAR_AUTOMATA::draw_colorTable(){
 	int size = model->size;
 	COLOR_TABLE travelLength;
 	travelLength.enableAutoScale(true);
-	float Rv = 10.0f;
+	float Rv = 5.0f;
 	travelLength.addEntry(Rv*0.0, vector3(0.0, 0.0, 1.0));
 	//travelLength.addEntry(Rv*1.0, vector3(0.0, 0.33, 1.0));
 	//travelLength.addEntry(Rv*2.0, vector3(0.0, 0.66, 1.0));
@@ -336,7 +336,7 @@ void CS_CELLULAR_AUTOMATA::draw_special_colorTable(){
 	int size = model->size;
 	COLOR_TABLE travelLength;
 	travelLength.enableAutoScale(true);
-	float Rv = 0.1f;
+	/*float Rv = 0.1f;
 	travelLength.addEntry(Rv*0.0, vector3(0.0, 0, 1.0));
 	travelLength.addEntry(Rv*1.0, vector3(0.0, 0.5, 1.0));
 	travelLength.addEntry(Rv*2.0, vector3(0.0, 1.0, 1.0));
@@ -351,14 +351,31 @@ void CS_CELLULAR_AUTOMATA::draw_special_colorTable(){
 	//travelLength.addEntry(Rv*11.0, vector3(1.0, 0, 1.0));
 	//travelLength.addEntry(Rv*12.0, vector3(1.0, 0, 0.75));
 	//travelLength.addEntry(Rv*13.0, vector3(1.0, 0, 0.5));
-	//travelLength.addEntry(Rv*14.0, vector3(1.0, 0, 0.25));
+	//travelLength.addEntry(Rv*14.0, vector3(1.0, 0, 0.25));*/
+	float Rv = 5.0f;
+	travelLength.addEntry(Rv*0.0, vector3(0.0, 0.0, 1.0));
+	//travelLength.addEntry(Rv*1.0, vector3(0.0, 0.33, 1.0));
+	//travelLength.addEntry(Rv*2.0, vector3(0.0, 0.66, 1.0));
+	//travelLength.addEntry(Rv*(mColorProportion[0]) * 10, vector3(0.0, 1.0, 1.0));
+	//travelLength.addEntry(Rv*3.0, vector3(0.0, 1.0, 1.0));
+	//travelLength.addEntry(Rv*4.0, vector3(0.0, 1.0, 0.0));
+	//travelLength.addEntry(Rv*5.0, vector3(0.0, 1.0, 0.0));
+	//travelLength.addEntry(Rv*6.0, vector3(1.0, 1.0, 0.0));
+	//travelLength.addEntry(Rv*7.0, vector3(1.0, 0.75, 0.0));
+	travelLength.addEntry(Rv*5.0f, vector3(0.0, 1.0, 1.0));
+	//travelLength.addEntry(Rv*(mColorProportion[0] + mColorProportion[1] + mColorProportion[2]) * 10, vector3(1.0, 1.0, 0.0));
+	//travelLength.addEntry(Rv*8.0, vector3(1.0, 0.5, 0.0));
+	travelLength.addEntry(Rv*10.0f, vector3(1.0, 1.0, 0.0));
+	travelLength.addEntry(Rv*15.0, vector3(1.0, 0.0, 0.0));
+	travelLength.addEntry(Rv*20.0, vector3(0.5, 0.0, 0.0));
 
 	for (int i = 0; i < size; i++)
 	{
 		for (int j = 0; j < size; j++)
 		{
 			//vector3 c = travelLength.getColor_Linear((guiParameter.specailColorTable_normalizeValue - cell[i][j].special_sFF[guiParameter.colorTable_special_ID]) / guiParameter.specailColorTable_normalizeValue);
-			vector3 c = travelLength.getColor_Linear((cell_manager.max_sFF - cell[i][j].special_sFF[guiParameter.colorTable_special_ID]) / cell_manager.max_sFF);
+			//vector3 c = travelLength.getColor_Linear((cell_manager.max_sFF - cell[i][j].special_sFF[guiParameter.colorTable_special_ID]) / cell_manager.max_sFF);
+			vector3 c = travelLength.getColor_Linear(cell[i][j].special_sFF[guiParameter.colorTable_special_ID]);
 			if (cell[i][j].obstacle)
 				glColor3f(0.0, 0.0, 0.0);
 			if (!cell[i][j].obstacle)
@@ -406,8 +423,7 @@ void CS_CELLULAR_AUTOMATA::draw_AFF(){
 	COLOR_TABLE travelLength;
 	travelLength.enableAutoScale(true);
 	float Rv = 1.0f;
-	travelLength.addEntry(Rv*0.0, vector3(1.0, 1.0, 1.0));
-	//travelLength.addEntry(Rv*1.0, vector3(0.0, 0.5, 1.0));
+	/*travelLength.addEntry(Rv*0.0, vector3(1.0, 1.0, 1.0));
 	travelLength.addEntry(Rv*5.0, vector3(0.0, 1.0, 1.0));
 	//travelLength.addEntry(Rv*3.0, vector3(0.0, 1.0, 0.5));
 	//travelLength.addEntry(Rv*4.0, vector3(0.0, 0.85, 0.0));
@@ -416,7 +432,11 @@ void CS_CELLULAR_AUTOMATA::draw_AFF(){
 	//travelLength.addEntry(Rv*7.5, vector3(1.0, 0.75, 0.0));
 	//travelLength.addEntry(Rv*8.0, vector3(1.0, 0.5, 0.0));
 	//travelLength.addEntry(Rv*9.0, vector3(1.0, 0.25, 0.0));
-	travelLength.addEntry(Rv*13.0, vector3(1.0, 0.0, 0.0));
+	travelLength.addEntry(Rv*13.0, vector3(1.0, 0.0, 0.0));*/
+	travelLength.addEntry(Rv*0.0, vector3(1.0, 1.0, 1.0));
+	travelLength.addEntry(Rv*5.0, vector3(0.0, 1.0, 0.0f));
+	travelLength.addEntry(Rv*9.0, vector3(1.0, 1.0, 0.0f));
+	travelLength.addEntry(Rv*13.0, vector3(1.0f, 0.0, 0.0));
 
 	for (int i = 0; i < size; i++)
 	{
@@ -437,8 +457,8 @@ void CS_CELLULAR_AUTOMATA::draw_totalFloorField(){
 	int size = model->size;
 	COLOR_TABLE travelLength;
 	travelLength.enableAutoScale(true);
-	float Rv = 10.0f;
-	travelLength.addEntry(Rv*0.0, vector3(0.0, 0.0, 1.0));
+	float Rv = 5.0f;
+	/*travelLength.addEntry(Rv*0.0, vector3(0.0, 0.0, 1.0));
 	//travelLength.addEntry(Rv*1.0, vector3(0.0, 0.33, 1.0));
 	//travelLength.addEntry(Rv*2.0, vector3(0.0, 0.66, 1.0));
 	travelLength.addEntry(Rv*(mColorProportion[0]) * 10, vector3(0.0, 1.0, 1.0));
@@ -450,7 +470,13 @@ void CS_CELLULAR_AUTOMATA::draw_totalFloorField(){
 	travelLength.addEntry(Rv*(mColorProportion[0] + mColorProportion[1] + mColorProportion[2]) * 10, vector3(1.0, 1.0, 0.0));
 	//travelLength.addEntry(Rv*8.0, vector3(1.0, 0.5, 0.0));
 	travelLength.addEntry(Rv*10.0, vector3(1.0, 0.0, 0.0));
-	//travelLength.addEntry(Rv*12.0, vector3(0.5, 0.0, 0.0));
+	//travelLength.addEntry(Rv*12.0, vector3(0.5, 0.0, 0.0));*/
+	travelLength.addEntry(Rv*0.0, vector3(0.0, 0.0, 1.0));
+	travelLength.addEntry(Rv*5.0f, vector3(0.0, 1.0, 1.0));
+	travelLength.addEntry(Rv*10.0f, vector3(1.0, 1.0, 0.0));
+	travelLength.addEntry(Rv*15.0, vector3(1.0, 0.0, 0.0));
+	travelLength.addEntry(Rv*20.0, vector3(0.5, 0.0, 0.0));
+
 
 	for (int i = 0; i < size; i++)
 	{
@@ -529,11 +555,11 @@ void CS_CELLULAR_AUTOMATA::draw_agent_anxiety(){
 	float Rv = 0.1f;
 	travelLength.addEntry(Rv*0.0, vector3(0.0, 0, 1.0));
 	//travelLength.addEntry(Rv*1.0, vector3(0.0, 0.5, 1.0));
-	travelLength.addEntry(Rv*0.33, vector3(0.0, 1.0, 1.0));
+	travelLength.addEntry(Rv*3.3f, vector3(0.0, 1.0, 1.0));
 	//travelLength.addEntry(Rv*3.0, vector3(0.0, 1.0, 0.5));
 	//travelLength.addEntry(Rv*4.0, vector3(0.0, 0.85, 0.0));
 	//travelLength.addEntry(Rv*5.0, vector3(0.5, 1.0, 0.0));
-	travelLength.addEntry(Rv*0.67, vector3(1.0, 1.0, 0.0));
+	travelLength.addEntry(Rv*6.7f, vector3(1.0, 1.0, 0.0));
 	//travelLength.addEntry(Rv*7.0, vector3(1.0, 0.75, 0.0));
 	//travelLength.addEntry(Rv*8.0, vector3(1.0, 0.5, 0.0));
 	//travelLength.addEntry(Rv*9.0, vector3(1.0, 0.25, 0.0));
@@ -610,10 +636,16 @@ void CS_CELLULAR_AUTOMATA::draw_obstacle(){
 				//glColor3f(0.0f, 0.5f, 0.0f);
 				//ogl_drawFilledRectXZ((i - size / 2) * SCALER - OFFSET, (i + 1 - size / 2) * SCALER - OFFSET, (j - size / 2) * SCALER - OFFSET, (j + 1 - size / 2) * SCALER - OFFSET, -0.1f);
 			}
+			if (cell[i][j].bannedArea == 0)
+			{
+				//glColor3f(1.0f, 0.0f, 0.0f);
+				//ogl_drawFilledRectXZ((i - size / 2) * SCALER - OFFSET, (i + 1 - size / 2) * SCALER - OFFSET, (j - size / 2) * SCALER - OFFSET, (j + 1 - size / 2) * SCALER - OFFSET, -0.1f);
+			}
 		}
 	}
 	draw_wall();
 	draw_obstacle_destination();
+	draw_obstacleMovePath();
 }
 
 void CS_CELLULAR_AUTOMATA::draw_wall(){
@@ -672,6 +704,37 @@ void CS_CELLULAR_AUTOMATA::draw_currentExitBlockAgent(){
 	//draw_agent_face_direction();
 	// draw obstacles
 	draw_obstacle();
+}
+
+void CS_CELLULAR_AUTOMATA::draw_obstacleMovePath(){
+
+	int size = model->size;
+	for (unsigned int i = 0; i < blocked_obstacles.size(); i++)
+	{
+		int o_id = blocked_obstacles[i];
+		/*for (auto &p : obstacles[o_id].mPath)
+		{
+			glColor3f(0, 0, 1);
+			ogl_drawFilledRectXZ((p.first - size / 2) * SCALER - OFFSET, (p.first + 1 - size / 2) * SCALER - OFFSET, (p.second - size / 2) * SCALER - OFFSET, (p.second + 1 - size / 2) * SCALER - OFFSET, -0.1f);
+		}*/
+		glLineWidth(1.5f);
+		glBegin(GL_LINES);
+		glColor3f(0, 0, 1);
+		if (obstacles[o_id].mPath.size() > 1)
+		{
+			for (unsigned int j = 0; j < obstacles[o_id].mPath.size(); j++)
+			{
+				if (j == obstacles[o_id].mPath.size() - 1)
+					continue;
+				PAIR_INT p = obstacles[o_id].mPath[j];
+				PAIR_INT p1 = obstacles[o_id].mPath[j + 1];
+				glVertex3f((p.first - size / 2) * SCALER, -0.1f, (p.second - size / 2) * SCALER);
+				glVertex3f((p1.first - size / 2) * SCALER, -0.1f, (p1.second - size / 2) * SCALER);
+			}
+		}
+		glEnd();
+		glLineWidth(1.0f);
+	}
 }
 
 void CS_CELLULAR_AUTOMATA::show_node_intersectObstacle(){
@@ -1032,8 +1095,8 @@ void CS_CELLULAR_AUTOMATA::draw_strength_agent(){
 	int size = model->size;
 	for (int i = 0; i < model->agent_number; i++)
 	{
-		if (agent[i].psychology.willness < guiParameter.willing_threshold /*WILLNESS_THRESHOLD*/)
-			continue;
+		//if (agent[i].psychology.willness < guiParameter.willing_threshold /*WILLNESS_THRESHOLD*/)
+		//	continue;
 		//glColor3f(0.0f, 0.0f, 0.0f);
 		//if (agent[i].volunteer)
 		//	glColor3f(1.0f, 0.0f, 1.0f);
@@ -1045,7 +1108,10 @@ void CS_CELLULAR_AUTOMATA::draw_strength_agent(){
 			ogl_drawSimpleSolidCircleXZ((agent[i].position.first - size / 2) * SCALER, 0.0f, (agent[i].position.second - size / 2) * SCALER, 5, 100);
 		}
 		if (agent[i].mVolunteered)
-			glColor3f(0.0f, 0.5f, 0.0f);
+		{
+			glColor3f(0.0f, 1.0f, 0.0f);
+			ogl_drawSimpleSolidCircleXZ((agent[i].position.first - size / 2) * SCALER, 0.0f, (agent[i].position.second - size / 2) * SCALER, 5, 100);
+		}
 		ogl_drawSimpleCircleXZ((agent[i].position.first - size / 2) * SCALER, 0.0f, (agent[i].position.second - size / 2) * SCALER, 5, 100);
 	}
 }

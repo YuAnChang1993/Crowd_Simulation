@@ -236,8 +236,6 @@ void CS_CELLULAR_AUTOMATA::initialize_variables(){
 	}
 	for (int i = 0; i < model->agent_number; i++)
 	{
-		//
-		//cout << i << endl;
 		agent[i].map_size = model->size;
 		agent[i].agent_id = i;
 		agent[i].psychology.willness = 0.0f;
@@ -278,6 +276,132 @@ void CS_CELLULAR_AUTOMATA::initialize_variables(){
 	//}
 } 
 
+void CS_CELLULAR_AUTOMATA::reset(){
+
+	//cout << "reset cellular simulation." << endl;
+	//cout << "seed: " << model->seed << endl;
+	//srand(model->seed);
+	//cout << "Evacuation time: " << mTimeCounter << endl;
+	if (model->mSameSeed)
+		srand(model->seed);
+	generateRandomAgentOrder();
+	mTimeCounter = 0;
+	mTimeStep = 0;
+	vector<int>().swap(leader_pool);
+	vector<int>().swap(strength_agent);
+	vector<int>().swap(weakness_agent);
+	vector<int>().swap(normal_obstacle);
+	vector<int>().swap(blocked_obstacles);
+	vector<int>().swap(volunteer_id);
+	vector<float>().swap(mDynamicFloorField);
+	leader_pool.clear();
+	strength_agent.clear();
+	weakness_agent.clear();
+	normal_obstacle.clear();
+	blocked_obstacles.clear();
+	volunteer_id.clear();
+	mDynamicFloorField.clear();
+	mAverageAnxeityAroundObserveAgent.clear();
+	mObserveAgentAnxiety.clear();
+	if (model->mSameSeed)
+	{
+		mAverageAnxeityAroundObserveAgent.resize(mObserverAgent.size());
+		mObserveAgentAnxiety.resize(mObserverAgent.size());
+	}
+	// reset agent's parameter
+	for (int i = 0; i < model->agent_number; i++)
+	{
+		agent[i].reset();
+		for (unsigned int j = 0; j < mExit.size(); j++)
+		{
+			agent[i].blockByExit[j] = 0;
+		}
+	}
+	gaussian_generate_personality();
+	computeAgentLeadership();
+	computeAgentPanic();
+	model->reset();
+	/*for (int i = 0; i < exits.size(); i++)
+	{
+	cell[exits[i].first][exits[i].second].cell_type = 1;
+	}*/
+	for (unsigned int i = 0; i < mExit.size(); i++)
+	{
+		for (int j = 0; j < mExit[i].width; j++)
+		{
+			int ex = mExit[i].position.first + mExit[i].direction.first*j;
+			int ez = mExit[i].position.second + mExit[i].direction.second*j;
+			cell[ex][ez].cell_type = 1;
+		}
+	}
+	for (int i = 0; i < model->size; i++)
+	{
+		for (int j = 0; j < model->size; j++)
+		{
+			cell[i][j].reset();
+		}
+	}
+	vector<OBSTACLE>().swap(obstacles);
+	obstacles.clear();
+	set_obstacle();
+	set_wall();
+	for (int i = 0; i < model->size; i++)
+	{
+		for (int j = 0; j < model->size; j++)
+		{
+			cell[i][j].create_space(obstacles.size());
+		}
+	}
+	cell_manager.specific_max_sFF.resize(obstacles.size());
+	compute_staticFF();
+	compute_clean_sFF();
+	int count = 0;
+	for (unsigned int i = 0; i < obstacles.size(); i++)
+	{
+		count += obstacles[i].component.size();
+		obstacles[i].moveDestination.resize(obstacles[i].volunteer_id.size());
+	}
+	volunteer_distance_map.resize(count);
+	for (unsigned int i = 0; i < obstacles.size(); i++)
+	{
+		for (unsigned int j = 0; j < obstacles[i].component.size(); j++)
+		{
+			compute_volunteer_staticFF(i, j);
+		}
+		//computeNewMapWithoutExit(i);
+	}
+	if (agent_psychology.obstacle_moveType == CS_OBSTACLE_AUTOMATIC_MOVE)
+		find_obstacleMustMove();
+	if (agent_psychology.obstacle_moveType == CS_OBSTACLE_MANUAL_MOVE)
+	{
+		for (unsigned int i = 0; i < obstacles.size(); i++)
+		{
+			blocked_obstacles.push_back(i);
+			obstacles[i].pool_index = (int)blocked_obstacles.size() - 1;
+		}
+		if (obstacles.size() == 1)
+			obstacles[0].volunteer_destination = PAIR_INT(obstacles[0].component[0].first, obstacles[0].component[0].second + model->mDisToExit);
+		//for (int i = 0; i < (int)obstacles.size(); i++)
+		//{
+		//	normal_obstacle.push_back(i);
+		//	obstacles[i].pool_index = normal_obstacle.size() - 1;
+		//}
+	}
+	/*
+	regroup the agent
+	*/
+	set_group();
+	/*
+	initialize agents' position
+	*/
+	initialize_agent_position();
+	initialize_agent_anxiety();
+	for (unsigned int i = 0; i < removed_obstacles.size(); i++)
+	{
+		removed_obstacles[i].has_volunteer = false;
+	}
+}
+
 void CS_CELLULAR_AUTOMATA::findNeighboringAgent(){
 
 	for (int i = 0; i < model->agent_number; i++)
@@ -309,6 +433,8 @@ void CS_CELLULAR_AUTOMATA::initialize_agent_position(){
 	{
 		switch (model->mLeaderDistrubution)
 		{
+		case -1:
+			break;
 		case 0:
 			minz = (float)model->size * 0.66f;
 			break;
@@ -329,6 +455,8 @@ void CS_CELLULAR_AUTOMATA::initialize_agent_position(){
 		case 5:
 			minx = (float)model->size * 0.66f;
 			break;
+		default:
+			break;
 		}
 		int leader_ID = agent_group[i].member[0];
 		if (!agent[leader_ID].leader)
@@ -343,7 +471,7 @@ void CS_CELLULAR_AUTOMATA::initialize_agent_position(){
 			|| (agent[leader_ID].compressive_leader && agent[leader_ID].position.second < minz)
 			|| (agent[leader_ID].compressive_leader && agent[leader_ID].position.second >= maxz)
 			|| (agent[leader_ID].compressive_leader && agent[leader_ID].position.first < minx)
-			|| (agent[leader_ID].compressive_leader && agent[leader_ID].position.first >= maxz)
+			|| (agent[leader_ID].compressive_leader && agent[leader_ID].position.first >= maxx)
 			|| cell[agent[leader_ID].position.first][agent[leader_ID].position.second].cell_type == 3)
 		{ // cell_type value != 0 means it's obstacle or exit
 			agent[leader_ID].position.first = rand() % model->size;
@@ -607,14 +735,15 @@ void CS_CELLULAR_AUTOMATA::compute_staticFF(){
 			switch (model->mType)
 			{
 			case 0:
-				verticalValue = exp(0.5f * (mExit[i].width / total_width));
-				diagonalValue = exp(0.5f * (mExit[i].width / total_width));
+				verticalValue = 1;
+				diagonalValue = 1.5f;
 				break;
 			case 1:
-				verticalValue = exp(0.5f * (mExit[i].width / total_width));
-				diagonalValue = exp(0.5f * DIAGONAL_VALUE * (mExit[i].width / total_width));
+				verticalValue = exp(model->ke / (mExit[i].width / total_width));
+				diagonalValue = exp(model->ke * DIAGONAL_VALUE / (mExit[i].width / total_width));
 				break;
 			}
+			//cout << verticalValue << " " << diagonalValue << endl;
 			while (!distance_queue.empty())
 			{
 				CELL_BFS temp = distance_queue.front();
@@ -701,10 +830,8 @@ void CS_CELLULAR_AUTOMATA::compute_staticFF(){
 	{
 		for (int j = 0; j < model->size; j++)
 		{
-
-			if (distance_map_[0][i][j].distance == FLT_MAX)
+			if (FLT_EQ(distance_map_[0][i][j].distance,FLT_MAX))
 				continue;
-
 			float min_exit = FLT_MAX;
 			int id = 0;
 			for (int k = 0; k < (int)mExit.size(); k++)
@@ -725,7 +852,6 @@ void CS_CELLULAR_AUTOMATA::compute_staticFF(){
 						min_exit = distance;
 				}
 			}
-
 			cell[i][j].sFF = min_exit;
 
 			if (cell[i][j].sFF > max)
@@ -780,12 +906,12 @@ void CS_CELLULAR_AUTOMATA::compute_clean_sFF(){
 			switch (model->mType)
 			{
 			case 0:
-				verticalValue = exp(0.5f * (mExit[i].width / total_width));
-				diagonalValue = exp(0.5f * (mExit[i].width / total_width));
+				verticalValue = 1;
+				diagonalValue = 1.5f;
 				break;
 			case 1:
-				verticalValue = exp(0.5f * (mExit[i].width / total_width));
-				diagonalValue = exp(0.5f * DIAGONAL_VALUE * (mExit[i].width / total_width));
+				verticalValue = exp(-model->ke * (mExit[i].width / total_width));
+				diagonalValue = exp(-model->ke * DIAGONAL_VALUE * (mExit[i].width / total_width));
 				break;
 			}
 			while (!distance_queue.empty())
@@ -1187,10 +1313,11 @@ void CS_CELLULAR_AUTOMATA::computeNewMapWithoutExit(int exit_block[]){
 				diagonalValue = 1.5f;
 				break;
 			case 1:
-				verticalValue = exp((mExit[i].width / total_width));
-				diagonalValue = exp(DIAGONAL_VALUE * (mExit[i].width / total_width));
+				verticalValue = exp(model->ke / (mExit[i].width / total_width));
+				diagonalValue = exp(model->ke * DIAGONAL_VALUE / (mExit[i].width / total_width));
 				break;
 			}
+			//cout << verticalValue << " " << diagonalValue << endl;
 			while (!distance_queue.empty())
 			{
 				CELL_BFS temp = distance_queue.front();
@@ -1230,36 +1357,39 @@ void CS_CELLULAR_AUTOMATA::computeNewMapWithoutExit(int exit_block[]){
 					distance_queue.push(distance_buffer[x][y + 1]);
 				}
 				// Moore
-				if (isValid(x + 1, y + 1) && distance_buffer[x + 1][y + 1].visisted == false && !cell[x + 1][y + 1].obstacle)
+				if (model->mNeighborType != 0)
 				{
-					if (distance_buffer[x][y].distance + diagonalValue < distance_buffer[x + 1][y + 1].distance)
-						distance_buffer[x + 1][y + 1].distance = distance_buffer[x][y].distance + diagonalValue;
-					distance_buffer[x + 1][y + 1].visisted = true;
-					distance_queue.push(distance_buffer[x + 1][y + 1]);
-				}
+					if (isValid(x + 1, y + 1) && distance_buffer[x + 1][y + 1].visisted == false && !cell[x + 1][y + 1].obstacle)
+					{
+						if (distance_buffer[x][y].distance + diagonalValue < distance_buffer[x + 1][y + 1].distance)
+							distance_buffer[x + 1][y + 1].distance = distance_buffer[x][y].distance + diagonalValue;
+						distance_buffer[x + 1][y + 1].visisted = true;
+						distance_queue.push(distance_buffer[x + 1][y + 1]);
+					}
 
-				if (isValid(x + 1, y - 1) && distance_buffer[x + 1][y - 1].visisted == false && !cell[x + 1][y - 1].obstacle)
-				{
-					if (distance_buffer[x][y].distance + diagonalValue < distance_buffer[x + 1][y - 1].distance)
-						distance_buffer[x + 1][y - 1].distance = distance_buffer[x][y].distance + diagonalValue;
-					distance_buffer[x + 1][y - 1].visisted = true;
-					distance_queue.push(distance_buffer[x + 1][y - 1]);
-				}
+					if (isValid(x + 1, y - 1) && distance_buffer[x + 1][y - 1].visisted == false && !cell[x + 1][y - 1].obstacle)
+					{
+						if (distance_buffer[x][y].distance + diagonalValue < distance_buffer[x + 1][y - 1].distance)
+							distance_buffer[x + 1][y - 1].distance = distance_buffer[x][y].distance + diagonalValue;
+						distance_buffer[x + 1][y - 1].visisted = true;
+						distance_queue.push(distance_buffer[x + 1][y - 1]);
+					}
 
-				if (isValid(x - 1, y + 1) && distance_buffer[x - 1][y + 1].visisted == false && !cell[x - 1][y + 1].obstacle)
-				{
-					if (distance_buffer[x][y].distance + diagonalValue < distance_buffer[x - 1][y + 1].distance)
-						distance_buffer[x - 1][y + 1].distance = distance_buffer[x][y].distance + diagonalValue;
-					distance_buffer[x - 1][y + 1].visisted = true;
-					distance_queue.push(distance_buffer[x - 1][y + 1]);
-				}
+					if (isValid(x - 1, y + 1) && distance_buffer[x - 1][y + 1].visisted == false && !cell[x - 1][y + 1].obstacle)
+					{
+						if (distance_buffer[x][y].distance + diagonalValue < distance_buffer[x - 1][y + 1].distance)
+							distance_buffer[x - 1][y + 1].distance = distance_buffer[x][y].distance + diagonalValue;
+						distance_buffer[x - 1][y + 1].visisted = true;
+						distance_queue.push(distance_buffer[x - 1][y + 1]);
+					}
 
-				if (isValid(x - 1, y - 1) && distance_buffer[x - 1][y - 1].visisted == false && !cell[x - 1][y - 1].obstacle)
-				{
-					if (distance_buffer[x][y].distance + diagonalValue < distance_buffer[x - 1][y - 1].distance)
-						distance_buffer[x - 1][y - 1].distance = distance_buffer[x][y].distance + diagonalValue;
-					distance_buffer[x - 1][y - 1].visisted = true;
-					distance_queue.push(distance_buffer[x - 1][y - 1]);
+					if (isValid(x - 1, y - 1) && distance_buffer[x - 1][y - 1].visisted == false && !cell[x - 1][y - 1].obstacle)
+					{
+						if (distance_buffer[x][y].distance + diagonalValue < distance_buffer[x - 1][y - 1].distance)
+							distance_buffer[x - 1][y - 1].distance = distance_buffer[x][y].distance + diagonalValue;
+						distance_buffer[x - 1][y - 1].visisted = true;
+						distance_queue.push(distance_buffer[x - 1][y - 1]);
+					}
 				}
 				
 			}
@@ -2044,10 +2174,9 @@ void CS_CELLULAR_AUTOMATA::check_volunteer_position(){
 			{
 				if (agent[a_id].position == obstacles[id].moveDestination[k])
 				{
-					//cout << agent[a_id].position.first << " " << agent[a_id].position.second << endl;
-					//system("pause");
 					delete_volunteer(id, j, a_id);
 					cout << "delete " << j << endl;
+					//system("pause");
 					//agent[a_id].block_pos = agent[id].position;
 					//agent[a_id].mBlockWay = true;
 					//agent[a_id].beside_obstacle = false;
@@ -2231,6 +2360,7 @@ void CS_CELLULAR_AUTOMATA::check_obstacleMovement_blocked_auto(int o_id, Directi
 	}
 	float dis[8] = { top, down, left, right, topRight, topLeft, downRight, downLeft };
 	float sort_dis[8] = { top, down, left, right, topRight, topLeft, downRight, downLeft };
+	vector<bool> visited(8, false);
 	sort(sort_dis, sort_dis + 8);
 	vector<PAIR_INT> overallPos;
 	for (unsigned int i = 0; i < obstacles[o_id].component.size(); i++)
@@ -2242,66 +2372,67 @@ void CS_CELLULAR_AUTOMATA::check_obstacleMovement_blocked_auto(int o_id, Directi
 		if (a_id < 0)
 			continue;
 	}
-	for (int i = 0; i < 2; i++)
+	int times = 2;
+	if (model->mNeighborType != 0)
+		times = 3;
+	for (int i = 0; i < times; i++)
 	{
+		if (FLT_EQ(sort_dis[i], FLT_MAX))
+			continue;
 		bool movable_ = true;
-		/*int dir;
-		for (int j = 0; j < 8; j++)
+		if (sort_dis[i] == top && !visited[i] && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(px0, pz0 + 1)) == obstacles[o_id].mPath.end())
 		{
-			if (sort_dis[i] == dis[j])
-			{
-				dir = j;
-			}
-		}*/
-		if (sort_dis[i] == top)
-		{
+			visited[i] = true;
 			obstacles[o_id].direction = PAIR_INT(0, 1);
 			d = _up;
 		}
-		if (sort_dis[i] == right)
+		if (sort_dis[i] == right && !visited[i] && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(px0 + 1, pz0)) == obstacles[o_id].mPath.end())
 		{
+			visited[i] = true;
 			obstacles[o_id].direction = PAIR_INT(1, 0);
 			d = _right;
 		}
-		if (sort_dis[i] == down)
+		if (sort_dis[i] == down && !visited[i] && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(px0, pz0 - 1)) == obstacles[o_id].mPath.end())
 		{
+			visited[i] = true;
 			obstacles[o_id].direction = PAIR_INT(0, -1);
 			d = _down;
 		}
-		if (sort_dis[i] == left)
+		if (sort_dis[i] == left && !visited[i] && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(px0 - 1, pz0)) == obstacles[o_id].mPath.end())
 		{
+			visited[i] = true;
 			obstacles[o_id].direction = PAIR_INT(-1, 0);
 			d = _left;
-			break;
 		}
-		if (sort_dis[i] == topRight)
+		if (sort_dis[i] == topRight && !visited[i] && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(px0 + 1, pz0 + 1)) == obstacles[o_id].mPath.end())
 		{
+			visited[i] = true;
 			obstacles[o_id].direction = PAIR_INT(1, 1);
 			d = _topRight;
-			break;
 		}
-		if (sort_dis[i] == topLeft)
+		if (sort_dis[i] == topLeft && !visited[i] && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(px0 - 1, pz0 + 1)) == obstacles[o_id].mPath.end())
 		{
+			visited[i] = true;
 			obstacles[o_id].direction = PAIR_INT(-1, 1);
 			d = _topLeft;
-			break;
 		}
-		if (sort_dis[i] == downRight)
+		if (sort_dis[i] == downRight && !visited[i] && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(px0 + 1, pz0 - 1)) == obstacles[o_id].mPath.end())
 		{
+			visited[i] = true;
 			obstacles[o_id].direction = PAIR_INT(1, -1);
 			d = _downRight;
-			break;
 		}
-		if (sort_dis[i] == downLeft)
+		if (sort_dis[i] == downLeft && !visited[i] && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(px0 - 1, pz0 - 1)) == obstacles[o_id].mPath.end())
 		{
+			visited[i] = true;
 			obstacles[o_id].direction = PAIR_INT(-1, -1);
 			d = _downLeft;
-			break;
 		}
-		if (check_obstacle_movement_block(o_id))
+		if (check_obstacle_movement_block(o_id, i))
 		{
+			visited[i] = true;
 			movable_ = false;
-			break;
+			//break;
 		}
 		for (unsigned int j = 0; j < obstacles[o_id].component.size(); j++)
 		{
@@ -2371,6 +2502,8 @@ void CS_CELLULAR_AUTOMATA::check_obstacleMovement_blocked_auto(int o_id, Directi
 		{
 			return;
 		}
+		//if (obstacles[o_id].mGiveWay && model->mNeighborType == 0)
+		//	times = 3;
 	}
 	/*for (int i = 0; i < (int)obstacles[o_id].component.size(); i++)
 	{
@@ -2574,6 +2707,7 @@ void CS_CELLULAR_AUTOMATA::check_cell_occupied(){
 			{
 				cell[x][z].occupied = 0;
 			}
+			cell[x][z].bannedArea = 1;
 		}
 	}
 }
@@ -2600,128 +2734,6 @@ void CS_CELLULAR_AUTOMATA::clearCandidateVolunteer(int o_id, int com_id){
 	}
 	obstacles[o_id].candidate_id[com_id].clear();
 	//system("pause");
-}
-
-void CS_CELLULAR_AUTOMATA::reset(){
-
-	//cout << "reset cellular simulation." << endl;
-	//cout << "seed: " << model->seed << endl;
-	//srand(model->seed);
-	//cout << "Evacuation time: " << mTimeCounter << endl;
-	if (model->mSameSeed)
-		srand(model->seed);
-	generateRandomAgentOrder();
-	mTimeCounter = 0;
-	mTimeStep = 0;
-	vector<int>().swap(leader_pool);
-	vector<int>().swap(strength_agent);
-	vector<int>().swap(weakness_agent);
-	vector<int>().swap(normal_obstacle);
-	vector<int>().swap(blocked_obstacles);
-	vector<int>().swap(volunteer_id);
-	vector<float>().swap(mDynamicFloorField);
-	leader_pool.clear();
-	strength_agent.clear();
-	weakness_agent.clear();
-	normal_obstacle.clear();
-	blocked_obstacles.clear();
-	volunteer_id.clear();
-	mDynamicFloorField.clear();
-	mAverageAnxeityAroundObserveAgent.clear();
-	mObserveAgentAnxiety.clear();
-	if (model->mSameSeed)
-	{
-		mAverageAnxeityAroundObserveAgent.resize(mObserverAgent.size());
-		mObserveAgentAnxiety.resize(mObserverAgent.size());
-	}
-	// reset agent's parameter
-	for (int i = 0; i < model->agent_number; i++)
-	{
-		agent[i].reset();
-	}
-	gaussian_generate_personality();
-	computeAgentLeadership();
-	computeAgentPanic();
-	model->reset();
-	/*for (int i = 0; i < exits.size(); i++)
-	{
-		cell[exits[i].first][exits[i].second].cell_type = 1;
-	}*/
-	for (unsigned int i = 0; i < mExit.size(); i++)
-	{
-		for (int j = 0; j < mExit[i].width; j++)
-		{
-			int ex = mExit[i].position.first + mExit[i].direction.first*j;
-			int ez = mExit[i].position.second + mExit[i].direction.second*j;
-			cell[ex][ez].cell_type = 1;
-		}
-	}
-	for (int i = 0; i < model->size; i++)
-	{
-		for (int j = 0; j < model->size; j++)
-		{
-			cell[i][j].reset();
-		}
-	}
-	vector<OBSTACLE>().swap(obstacles);
-	obstacles.clear();
-	set_obstacle();
-	set_wall();
-	for (int i = 0; i < model->size; i++)
-	{
-		for (int j = 0; j < model->size; j++)
-		{
-			cell[i][j].create_space(obstacles.size());
-		}
-	}
-	cell_manager.specific_max_sFF.resize(obstacles.size());
-	compute_staticFF();
-	compute_clean_sFF();
-	int count = 0;
-	for (unsigned int i = 0; i < obstacles.size(); i++)
-	{
-		count += obstacles[i].component.size();
-		obstacles[i].moveDestination.resize(obstacles[i].volunteer_id.size());
-	}
-	volunteer_distance_map.resize(count);
-	for (unsigned int i = 0; i < obstacles.size(); i++)
-	{
-		for (unsigned int j = 0; j < obstacles[i].component.size(); j++)
-		{
-			compute_volunteer_staticFF(i, j);
-		}
-		//computeNewMapWithoutExit(i);
-	}
-	if (agent_psychology.obstacle_moveType == CS_OBSTACLE_AUTOMATIC_MOVE)
-		find_obstacleMustMove();
-	if (agent_psychology.obstacle_moveType == CS_OBSTACLE_MANUAL_MOVE)
-	{
-		for (unsigned int i = 0; i < obstacles.size(); i++)
-		{
-			blocked_obstacles.push_back(i);
-			obstacles[i].pool_index = (int)blocked_obstacles.size() - 1;
-		}
-		if (obstacles.size() == 1)
-			obstacles[0].volunteer_destination = PAIR_INT(obstacles[0].component[0].first, obstacles[0].component[0].second + model->mDisToExit);
-		//for (int i = 0; i < (int)obstacles.size(); i++)
-		//{
-		//	normal_obstacle.push_back(i);
-		//	obstacles[i].pool_index = normal_obstacle.size() - 1;
-		//}
-	}
-	/*
-	regroup the agent
-	*/
-	set_group();
-	/*
-	initialize agents' position
-	*/
-	initialize_agent_position();
-	initialize_agent_anxiety();
-	for (unsigned int i = 0; i < removed_obstacles.size(); i++)
-	{
-		removed_obstacles[i].has_volunteer = false;
-	}
 }
 
 void CS_CELLULAR_AUTOMATA::start(){
@@ -2773,6 +2785,16 @@ void CS_CELLULAR_AUTOMATA::setObstacleDestination()
 		mExperimentData.mTotalAverageEvaciationTime[i] = 0;
 		mExperimentData.mTotalAverageLastAgentEvacuationTime[i] = 0;
 	}
+}
+
+void CS_CELLULAR_AUTOMATA::setLeaderDistribution()
+{
+	model->mLeaderDistrubution++;
+}
+
+void CS_CELLULAR_AUTOMATA::setLeaderProportion()
+{
+	guiParameter.leader_proportion += 0.01f;
 }
 
 void CS_CELLULAR_AUTOMATA::addStatisticalArea(){
@@ -2832,7 +2854,7 @@ double CS_CELLULAR_AUTOMATA::get_probability(int x, int y, int agent_num){
 		leader_x = agent[agent[agent_num].leader_id].position.first;
 		leader_y = agent[agent[agent_num].leader_id].position.second;
 		if (distanceToLeader(x, y, agent_num) < model->group_radius || !opposite_direction(agent_num, distanceToLeader(x, y, agent_num)))
-			return exp((double)-model->kd_member * agent[agent_num].leader_distance) * exp((double)-model->ks_member * model->ks * (cell[x][y].sFF + cell[x][y].aFF)) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
+			return exp((double)model->kd_member * agent[agent_num].leader_distance) * exp((double)-model->ks_member * model->ks * (cell[x][y].sFF + cell[x][y].aFF)) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_ * cell[x][y].bannedArea;
 		return 0.0f;
 	}
 	// if agent is a leader block by obstacle and want to escape to another exit
@@ -2848,18 +2870,33 @@ double CS_CELLULAR_AUTOMATA::get_probability(int x, int y, int agent_num){
 	if (anxietyEffect < 0.3f)
 		anxietyEffect = 0.3f;
 	// 如果agent看到出口而且出口沒被obstacle擋住，則agent將不再受DFF影響
-	if (agent[agent_num].mSawExit)
+	if (agent[agent_num].mSawExit || agent[agent_num].mVolunteered)
 	{
 		anxietyEffect = 1;
 		sawExit = 0;
 	}
+	anxietyEffect = 1;
 	if (agent[agent_num].blocked_obstacle_id == -1)
 	{
-		return exp((double)-model->kd * cell[x][y].dFF * sawExit) * exp((double)-model->ks * (cell[x][y].sFF) * anxietyEffect) * exp((double)-model->ka * cell[x][y].aFF) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
+		if (agent_num == 10)
+		{
+			//cout << x << " " << y << endl;
+			//cout << (cell[x][y].sFF) * anxietyEffect << endl;
+		}
+			//cout << exp((double)model->kd * cell[x][y].dFF * sawExit) * exp((double)-model->ks * (cell[x][y].sFF) * anxietyEffect) * exp((double)-model->ka * cell[x][y].aFF) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_ * cell[x][y].bannedArea << endl;
+		if (!agent[agent_num].mVolunteered)
+			return exp((double)model->kd * cell[x][y].dFF * sawExit) * exp((double)-model->ks * (cell[x][y].sFF) * anxietyEffect) * exp((double)-model->ka * cell[x][y].aFF) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_ * cell[x][y].bannedArea;
+		return exp((double)model->kd * cell[x][y].dFF * sawExit) * exp((double)-model->ks * (cell[x][y].sFF) * anxietyEffect) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
 	}
+	float extendKD = 1;
 	int FloorFieldMapID = (int)decodingFloorFieldID(agent[agent_num].blockByExit);
-	return exp((double)-model->kd * cell[x][y].dFF * sawExit) * exp((double)-model->ks * cell[x][y].special_sFF[FloorFieldMapID] * anxietyEffect) * exp((double)-model->ka * cell[x][y].aFF) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
-	
+	if (FloorFieldMapID == pow(2, obstacles.size()) - 1)
+		extendKD = 3;
+	if (agent_num == 10)
+		cout << FloorFieldMapID << endl;
+	if (!agent[agent_num].mVolunteered)
+		return exp((double)model->kd * cell[x][y].dFF * sawExit * extendKD) * exp((double)-model->ks * cell[x][y].special_sFF[FloorFieldMapID] * anxietyEffect) * exp((double)-model->ka * cell[x][y].aFF) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_ * cell[x][y].bannedArea;
+	return exp((double)model->kd * cell[x][y].dFF * sawExit) * exp((double)-model->ks * cell[x][y].special_sFF[FloorFieldMapID] * anxietyEffect) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
 	//return exp((double)model->kd * cell[x][y].dFF) * exp((double)-model->ks * cell[x][y].sFF) * (1 - cell[x][y].occupied) * cell[x][y].obstacle_;
 }
 
@@ -4225,98 +4262,93 @@ void CS_CELLULAR_AUTOMATA::find_direction_towardToObstacleDestination(int o_id, 
 		des_z = obstacles[o_id].moveDestination[0].second;
 		break;
 	}
-	if (isValid(x, z + 1))
+	if (isValid(x, z + 1) && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(x, z + 1)) == obstacles[o_id].mPath.end())
 	{
 		up = (float)sqrt(pow(x - des_x, 2) + pow(z + 1 - des_z, 2));
 	}
-	if (isValid(x, z - 1))
+	if (isValid(x, z - 1) && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(x, z - 1)) == obstacles[o_id].mPath.end())
 	{
 		down = (float)sqrt(pow(x - des_x, 2) + pow(z - 1 - des_z, 2));
 	}
-	if (isValid(x - 1, z))
+	if (isValid(x - 1, z) && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(x - 1, z)) == obstacles[o_id].mPath.end())
 	{
 		left = (float)sqrt(pow(x - 1 - des_x, 2) + pow(z - des_z, 2));
 	}
-	if (isValid(x + 1, z))
+	if (isValid(x + 1, z) && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(x + 1, z)) == obstacles[o_id].mPath.end())
 	{
 		right = (float)sqrt(pow(x + 1 - des_x, 2) + pow(z - des_z, 2));
 	}
 	if (model->mNeighborType != 0)
 	{
-		if (isValid(x + 1, z + 1))
+		if (isValid(x + 1, z + 1) && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(x + 1, z + 1)) == obstacles[o_id].mPath.end())
 		{
 			topRight = (float)sqrt(pow(x + 1 - des_x, 2) + pow(z + 1 - des_z, 2));
 		}
-		if (isValid(x - 1, z + 1))
+		if (isValid(x - 1, z + 1) && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(x - 1, z + 1)) == obstacles[o_id].mPath.end())
 		{
 			topLeft = (float)sqrt(pow(x - 1 - des_x, 2) + pow(z + 1 - des_z, 2));
 		}
-		if (isValid(x + 1, z - 1))
+		if (isValid(x + 1, z - 1) && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(x + 1, z - 1)) == obstacles[o_id].mPath.end())
 		{
 			downRight = (float)sqrt(pow(x + 1 - des_x, 2) + pow(z - 1 - des_z, 2));
 		}
-		if (isValid(x - 1, z - 1))
+		if (isValid(x - 1, z - 1) && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(x - 1, z - 1)) == obstacles[o_id].mPath.end())
 		{
 			downLeft = (float)sqrt(pow(x - 1 - des_x, 2) + pow(z - 1 - des_z, 2));
 		}
 	}
 	float distance[8] = { up, down, left, right, topRight, topLeft, downRight, downLeft };
-	/*for (int i = 0; i < 4; i++)
-	{
-		cout << distance[i] << " ";
-	}
-	cout << endl;*/
 	sort(distance, distance + 8);
-	/*for (int i = 0; i < 4; i++)
+	int times = 2;
+	if (model->mNeighborType != 0)
+		times = 3;
+	for (int i = 0; i < times; i++)
 	{
-		cout << distance[i] << " ";
-	}
-	cout << endl;*/
-	for (int i = 0; i < 2; i++)
-	{
-		if (abs(up - distance[i]) < 0.000001f)
+		if (FLT_EQ(distance[i], FLT_MAX))
+			continue;
+		if (FLT_EQ(distance[i], up) && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(x, z + 1)) == obstacles[o_id].mPath.end())
 		{
 			d = _up;
 			obstacles[o_id].direction = PAIR_INT(0, 1);
 			break;
 		}
-		else if (abs(down - distance[i]) < 0.000001f)
+		else if (FLT_EQ(distance[i], down) && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(x, z - 1)) == obstacles[o_id].mPath.end())
 		{
 			d = _down;
 			obstacles[o_id].direction = PAIR_INT(0, -1);
 			break;
 		}
-		else if (abs(left - distance[i]) < 0.000001f)
+		else if (FLT_EQ(distance[i], left) && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(x - 1, z)) == obstacles[o_id].mPath.end())
 		{
 			d = _left;
 			obstacles[o_id].direction = PAIR_INT(-1, 0);
 			break;
 		}
-		else if (abs(right - distance[i]) < 0.000001f)
+		else if (FLT_EQ(distance[i], right) && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(x + 1, z)) == obstacles[o_id].mPath.end())
 		{
 			d = _right;
 			obstacles[o_id].direction = PAIR_INT(1, 0);
 			break;
 		}
-		else if (abs(topRight - distance[i]) < 0.000001f)
+		else if (FLT_EQ(distance[i], topRight) && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(x + 1, z + 1)) == obstacles[o_id].mPath.end())
 		{
 			d = _topRight;
 			obstacles[o_id].direction = PAIR_INT(1, 1);
 			break;
 		}
-		else if (abs(topLeft - distance[i]) < 0.000001f)
+		else if (FLT_EQ(distance[i], topLeft) && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(x - 1, z + 1)) == obstacles[o_id].mPath.end())
 		{
 			d = _topLeft;
 			obstacles[o_id].direction = PAIR_INT(-1, 1);
 			break;
 		}
-		else if (abs(downRight - distance[i]) < 0.000001f)
+		else if (FLT_EQ(distance[i], downRight) && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(x + 1, z - 1)) == obstacles[o_id].mPath.end())
 		{
 			d = _downRight;
 			obstacles[o_id].direction = PAIR_INT(1, -1);
 			break;
 		}
-		else if (abs(downLeft - distance[i]) < 0.000001f)
+		else if (FLT_EQ(distance[i], down) && find(obstacles[o_id].mPath.begin(), obstacles[o_id].mPath.end(), PAIR_INT(x - 1, z - 1)) == obstacles[o_id].mPath.end())
 		{
 			d = _downLeft;
 			obstacles[o_id].direction = PAIR_INT(-1, -1);

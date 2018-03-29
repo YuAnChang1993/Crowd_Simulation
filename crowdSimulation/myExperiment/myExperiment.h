@@ -16,6 +16,8 @@ public:
 	void experiment_obstacle_moveDistance();
 	void experiment_obstacle_destination();
 	void experiment_anxiety();
+	void experiment_leader_distribution();
+	void experiment_leader_proportion();
 	int mType;
 	int mRunTimes;
 	int mTimes;

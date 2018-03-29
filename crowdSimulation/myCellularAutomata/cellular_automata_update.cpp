@@ -150,6 +150,22 @@ void CS_CELLULAR_AUTOMATA::update_agent_position(){
 			cout << "mExit_" << i << ": " << (float)amount[i] / mExit[i].width << endl;
 		}
 	}*/
+	
+	float anx = 0;
+	int total = 0;
+	for (int i = 0; i < model->agent_number; i++)
+	{
+		if (agent[i].arrival)
+			continue;
+		anx += agent[i].anxiety;
+		//cout << agent[i].anxiety << endl;
+		total++;
+	}
+	if (total != 0)
+	{
+		anx /= model->remain_agent;
+		mAvergaeAnxiety.push_back(anx);
+	}
 	if (model->remain_agent == 0 && !model->out /*&& model->mNewSeed == 1*/)
 	{
 		model->out = true;
@@ -158,7 +174,7 @@ void CS_CELLULAR_AUTOMATA::update_agent_position(){
 	if (model->remain_agent == 0 && !model->out_anxiety)
 	{
 		model->out_anxiety = true;
-		//outputAnxietyVariation();
+		outputAnxietyVariation();
 		outputStatisticInfo();
 		outputMaxDFF();
 		outputStatisticsOnAnxiety_LeaderAndMember();
@@ -460,6 +476,10 @@ void CS_CELLULAR_AUTOMATA::update_Cell_AgentWantOccpied(){
 			downLeft = get_probability_volunteer(x - 1, z - 1, i, com_id, o_id);
 		}*/
 		total = top + down + left + right + topRight + topLeft + downRight + downLeft;
+		if (i == 10)
+		{
+			//cout << top << " " << down << " " << left << " " << right << " " << topRight << " " << topLeft << " " << downRight << " " << downLeft << endl;
+		}
 		/*if (determine_leader_waiting(agent[i].leader, i))
 		{
 			agent[i].waiting = true;
@@ -1059,6 +1079,8 @@ void CS_CELLULAR_AUTOMATA::update_blocked_obstacle_position(){
 					//if (agent[i].volunteer)
 					//	cout << "volunteereeeeeerere ";
 					//cout << agent[i].position.first << " " << agent[i].position.second << endl;
+					if (agent[i].volunteer)
+						delete_volunteer(agent[i].blocked_obstacle_id, agent[i].obstacle_component_id, i);
 				}
 			}
 		}
@@ -1067,31 +1089,6 @@ void CS_CELLULAR_AUTOMATA::update_blocked_obstacle_position(){
 
 void CS_CELLULAR_AUTOMATA::automatic_update_blocked_obstacle_position(){
 
-	/*for (int i = 0; i < model->agent_number; i++)
-	{
-		for (int j = 0; j < model->agent_number; j++)
-		{
-			if (agent[i].position == agent[j].position && i != j && !agent[i].arrival)
-			{
-				if (agent[i].volunteer && agent[j].volunteer)
-				{
-					cout << "agent " << i << " is volunteer" << ", agent " << j << " is volunteer" << endl;
-				}
-				if (!agent[i].volunteer)
-				{
-					cout << "agent " << i << " is common agent." << endl;
-				}
-				if (!agent[j].volunteer)
-				{
-					cout << "agent " << j << " is common agent." << endl;
-				}
-				//if (agent[j].volunteer)
-				//{
-				//	cout << "agent " << j << " is volunteer" << endl;
-				//}
-			}
-		}
-	}*/
 	for (unsigned int i = 0; i < blocked_obstacles.size(); i++)
 	{
 		int id = blocked_obstacles[i];
@@ -1100,13 +1097,19 @@ void CS_CELLULAR_AUTOMATA::automatic_update_blocked_obstacle_position(){
 			if (obstacles[id].volunteer_id[j] == -1)
 				continue;
 			agent[obstacles[id].volunteer_id[j]].blocked_obstacle_id = id;
+			agent[obstacles[id].volunteer_id[j]].mServeObstacleID = id;
 		}
 	}
+	// 將AFF影響區域清空
+	mAFFArea.clear();
 	// 用來存被移動到目的地的obstacle的ID
 	vector<int> removal_obstacle;
 	for (unsigned int i = 0; i < blocked_obstacles.size(); i++)
 	{
 		int o_id = blocked_obstacles[i];
+		// reset阻擋障礙物行進的obstacle id
+		obstacles[o_id].mStuckObstacleID = -1;
+		obstacles[o_id].mGiveWay = false;
 		check_obstacle_arrive(o_id);
 		if (obstacles[o_id].arrive_destination)
 		{
@@ -1341,6 +1344,7 @@ void CS_CELLULAR_AUTOMATA::automatic_update_blocked_obstacle_position(){
 		}
 		obstacle_timer_accumulation(o_id);
 		obstacles[o_id].stuck_time++;
+		//cout << o_id << " " << obstacles[o_id].direction.first << " " << obstacles[o_id].direction.second << endl;
 	}
 	for (unsigned int i = 0; i < removal_obstacle.size(); i++)
 	{
@@ -1815,7 +1819,7 @@ void CS_CELLULAR_AUTOMATA::updateInformationBetweenAgents(){
 		double rnd;
 		float anx = agent[i].anxiety;
 		double prob = exp(-30 * exp(double(1 - anx)));
-		//prob = model->mCommunicationProbability;
+		prob = model->mCommunicationProbability;
 		if (isValid(x + 1,z) && cell[x + 1][z].occupied == 1)
 		{
 			contactAgentID = cell[x + 1][z].occupant_id;

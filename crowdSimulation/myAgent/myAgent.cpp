@@ -120,11 +120,12 @@ void AGENT::receiveEmotionFromVisibleAgent(){
 void AGENT::reset(){
 
 	arrival = false;
+	blockTheRoad = false;
+	close_obstalce = false;
 	start_time = clock();
 	escape_time = clock();
 	guider = false;
 	click = false;
-	height = 160;
 	path.clear();
 	stop_guide = false;
 	be_leaded = false;
@@ -133,6 +134,16 @@ void AGENT::reset(){
 	finish_task = false;
 	compressive_leader = false;
 	strength = false;
+	add_sFF = false;
+	bystander = false;
+	mVolunteered = false;
+	mGuider = false;
+	mBlockWay = false;
+	mSawExit = false;
+	comity = false;
+	mStayInPlace = false;
+	cur_click = false;
+	height = 160;
 	obstacle_component_id = -1;
 	push_obstacle_id = -1;
 	anxiety = 0.0f;
@@ -143,8 +154,6 @@ void AGENT::reset(){
 	empathy = (double)rand() / RAND_MAX;
 	pre_sFF = 0.0f;
 	stay_counter = 0;
-	add_sFF = false;
-	bystander = false;
 	vector<int>().swap(visible_agentID);
 	vector<PAIR_INT>().swap(visible_area);
 	vector<float>().swap(anxiety_variation);
@@ -153,10 +162,18 @@ void AGENT::reset(){
 	visible_area.clear();
 	anxiety_variation.clear();
 	visible_area_advancesFF.clear();
+	mNeighboringAgent.clear();
+	mAvoidObstacle.clear();
+	memberID.clear();
 	for (unsigned int i = 0; i < remain_anxiety.size(); i++)
 	{
 		remain_anxiety[i] = 0;
 	}
+	mServeObstacleID = -1;
+	block_pos = PAIR_INT(-1, -1);
+	mPushTimeCounter = 0;
+	currentVisibleBlockedExit = -1;
+	mVolunteered = false;
 }
 
 void AGENT::insertAnxiety(float anx){
@@ -813,6 +830,10 @@ PAIR_INT CS_CELLULAR_AUTOMATA::choose_direction(int x, int y, int agent_number){
 		agent[agent_number].pre_sFF = cell[x][y].sFF;
 		return temp_pos;
 	}
+	//if (agent_number < 10)
+	//{
+		//cout << top << " " << down << " " << left << " " << right << " " << topRight << " " << topLeft << " " << downRight << " " << downLeft << endl;
+	//}
 
 	// normalize each direction, their sum are equal to one	
 	total = top + down + left + right + topRight + topLeft + downRight + downLeft;
@@ -1700,11 +1721,14 @@ float CS_CELLULAR_AUTOMATA::combinationFunction(int id){
 	float influenceStrength = getInfluenceStrengthFromContactAgents(id);
 	float anxiety = agent[id].anxiety;
 	float tendency = agent[id].mPersonality.neuroticism;
-	tendency = tendency + getContagionStrengthFromContactLeader(id) * (getLeaderEffect(id) - agent[id].mPersonality.neuroticism);
+	//tendency = tendency + getContagionStrengthFromContactLeader(id) *(getLeaderEffect(id) - agent[id].mPersonality.neuroticism);
+	tendency = tendency + (getLeaderEffect(id) - agent[id].mPersonality.neuroticism);
+	//if ((getLeaderEffect(id) - agent[id].mPersonality.neuroticism) != 0)
+	//	cout << (getLeaderEffect(id) - agent[id].mPersonality.neuroticism) << endl;
 	if (tendency < 0.1f)
 		tendency = 0.1f;
 	agent[id].mPersonality.neuroticism = tendency;
-	float t = getContagionStrengthFromContactLeader(id) * (getLeaderEffect(id) - agent[id].mPersonality.neuroticism);
+	float t = getContagionStrengthFromContactLeader(id) *(getLeaderEffect(id) - agent[id].mPersonality.neuroticism);
 	//tendency = getAverageLeaderNeuroticism(id);
 	//if (t != 0)
 	//{
@@ -1794,8 +1818,10 @@ float CS_CELLULAR_AUTOMATA::getLeaderEffect(int id){
 		//leaderEffect += (agent[e].mPersonality.neuroticism * (s / contagionStrength));
 		leaderEffect += getContagionStrength(id, e) * agent[e].mPersonality.neuroticism;
 	}
-	if (leaderEffect = 0)
+	if (leaderEffect == 0)
+	{
 		return agent[id].mPersonality.neuroticism;
+	}
 	return leaderEffect / (getContagionStrengthFromContactLeader(id) + 0.00001f);
 }
 

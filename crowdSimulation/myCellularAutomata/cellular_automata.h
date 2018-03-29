@@ -41,13 +41,14 @@
 #define CS_OBSTACLE_AUTOMATIC_MOVE 1
 #define CROWD_SIMULATION_WITH_AGENT_PERSONALITY 0
 #define CROWD_SIMULATION_WITHOUT_AGENT_PERSONALITY 1
-#define VISIBILITY_GRID_LENGTH 10
+#define VISIBILITY_GRID_LENGTH 5
 #define GROUP_SIZE 4
 #define DYNAMIC_VALUE 1.0f
 #define LOWER_INTERVAL 0.9f
 #define HIGHER_INTERVAL 0.99f
 #define OBSTACLE_UNIT 0.05f
 #define GUIDE_DIS 3
+#define FLT_EQ(a,b) (abs(a-b)) < (FLT_EPSILON) ? (true) : (false)
 
 using namespace std;
 
@@ -122,6 +123,7 @@ public:
 		exit = false;
 		m_OccupantID.resize(8,-1);
 		occupied_number = 0;
+		bannedArea = 1;
 	}
 	int x, y; //grid's position
 	int exit_id;
@@ -143,6 +145,7 @@ public:
 	int occupant_id; //record which agent occupied the cell
 	int obstacle_id;
 	int occupied_number;
+	int bannedArea;
 	bool inobstacle;
 	bool intersect_obstacle; //false: blue; true: red
 	bool obstacle; //true: obstacle; false: not obstacle
@@ -230,6 +233,7 @@ public:
 	float ka;
 	float ki;
 	float kw;
+	float ke;
 	float meu;
 	float d_max;
 	float alpha;
@@ -510,6 +514,8 @@ public:
 		mGuider = false;
 		mBlockWay = false;
 		block_pos = PAIR_INT(-1, -1);
+		mServeObstacleID = -1;
+		comity = false;
 	}
 	int agent_id;
 	int leader_id;
@@ -530,6 +536,7 @@ public:
 	int currentVisibleBlockedExit;
 	int mEscapeExit;
 	int mPushTimeCounter;
+	int mServeObstacleID;
 	bool arrival;
 	bool assigned; //false: haven't assign a group to agent
 	bool leader; //true: is leader; false: not leader
@@ -679,6 +686,8 @@ public:
 		mHaveDes = false;
 		stuck_time = 0;
 		mWillThreshold = 0;
+		mStuckObstacleID = -1;
+		mGiveWay = false;
 	}
 	float minx, maxx, minz, maxz;
 	vector<vector3> nodes;
@@ -742,6 +751,12 @@ public:
 	float mWillThreshold;
 	//
 	PAIR_INT mMoveDir;
+	//
+	vector<int> mVisibleObstacleID;
+	int mStuckObstacleID;
+	bool mGiveWay;
+	//
+	vector<PAIR_INT> mPath;
 };
 
 class Exit{
@@ -914,6 +929,8 @@ public:
 	void setMoveObstacleTime();
 	void setMoveObstacleDistance();
 	void setObstacleDestination();
+	void setLeaderDistribution();
+	void setLeaderProportion();
 	void addStatisticalArea();
 	void draw_segmentsBetweenCellAndExits();
 	void draw_agent();
@@ -957,6 +974,7 @@ public:
 	void draw_visible_agent(int); // a_id
 	void draw_visible_area(int); // a_id
 	void draw_currentExitBlockAgent();
+	void draw_obstacleMovePath();
 	void show_node_intersectObstacle();
 	void show_specific_group();
 	void show_agent_info();
@@ -1007,6 +1025,8 @@ public:
 	void outputMoveObstacleTimeExperiment();
 	void outputMoveObstacleDistanceExperiment();
 	void outputObstacleLocatedExperiment();
+	void outputLeaderDistributionExperiment();
+	void outputLeaderProportionExperiment();
 	void outputStatisticsOnAnxiety_LeaderAndMember();
 	void outputTimeInfluenceStrength();
 	void outputTendencyInfluence();
@@ -1148,6 +1168,8 @@ protected:
 	void switchVolunteer(int, int, int); //o_id, com0_id, com1_id
 	void findGuidePosition(int, int); //o_id, a_id
 	void detectVolunteerPosition(int); //o_id
+	void resolveObstaclesConflict();
+	void testCLibrary(int);
 	int findNearestObstacleComponentID(int, int); //o_id, a_id
 	int getVolunteerMapID(int, int); //o_id, com_id
 	float findNearestDistanceToExit(vector<PAIR_INT>);
@@ -1189,7 +1211,7 @@ protected:
 	bool check_obstacle_weight(int); //o_id
 	bool check_volunteer_setup(int); //o_id
 	bool check_obstacleID_exist(int); //o_id
-	bool check_obstacle_movement_block(int); //o_id
+	bool check_obstacle_movement_block(int, int = 0); //o_id, direction
 	bool check_volunteer_movement_block(int); //a_id
 	bool check_moveToLowSFF(int o_id);
 	bool check_groupWill(int, int); //a_id, o_id
@@ -1268,6 +1290,9 @@ private:
 	vector<vector<float>> mObserveAgentAnxiety;
 	vector<vector<vector<float>>> mRemovalObstacleDestinationAFF;
 	queue<CELL_BFS> distance_queue;
+	vector<float> mAvergaeAnxiety;
+	vector<PAIR_INT> mAFFArea;
+	vector<PAIR_INT> mObstacleMoveDestinationDir;
 	//
 	ifstream file;
 	ofstream outputFile;

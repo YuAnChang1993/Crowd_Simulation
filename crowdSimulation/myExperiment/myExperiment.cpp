@@ -66,6 +66,12 @@ void Experiment::run()
 		case 4:
 			experiment_anxiety();
 			break;
+		case 5:
+			experiment_leader_distribution();
+			break;
+		case 6:
+			experiment_leader_proportion();
+			break;
 		}
 	}
 }
@@ -147,14 +153,47 @@ void Experiment::experiment_anxiety()
 	{
 		cout << "Times " << mTimes << endl;
 		ca->outputStatisticsOnAnxiety_LeaderAndMember();
+		ca->reset();	
+	}
+}
+
+void Experiment::experiment_leader_distribution()
+{
+	if (ca->get_remain_agent() == "0" && mTimes > 0)
+	{
+		cout << "Times " << mTimes << endl;
+		mTimes--;
 		ca->reset();
-		
+	}
+	if (mTimes == 0 && mRunTimes > 0)
+	{
+		ca->outputLeaderDistributionExperiment();
+		mRunTimes--;
+		mTimes = 100;
+		ca->setMoveObstacleDistance();
+	}
+}
+
+void Experiment::experiment_leader_proportion()
+{
+	if (ca->get_remain_agent() == "0" && mTimes > 0)
+	{
+		cout << "Times " << mTimes << endl;
+		mTimes--;
+		ca->reset();
+	}
+	if (mTimes == 0 && mRunTimes > 0)
+	{
+		ca->outputLeaderProportionExperiment();
+		mRunTimes--;
+		mTimes = 100;
+		ca->setMoveObstacleDistance();
 	}
 }
 
 void Experiment::update()
 {
-	ca->generateRandomAgentOrder();
+	/*ca->generateRandomAgentOrder();
 	ca->updateTimeStep();
 	ca->check_cell_occupied();
 	ca->agent_detect_obstalce();
@@ -169,5 +208,33 @@ void Experiment::update()
 	ca->updateVisibleAgent();
 	ca->update_agent_psychology();
 	ca->reset_agent_parameters();
-	ca->update_dynamicFF();
+	ca->update_dynamicFF();*/
+	ca->generateRandomAgentOrder();
+	ca->collectAverageAnxietyAroundObserveAgent();
+	ca->updateTimeStep();
+	ca->check_cell_occupied(); //2017/10/28
+	//ca->agent_detect_obstalce(); //2017/10/31
+	//ca->update_agent_stress(); //2017/08/30
+	ca->copy_dynamicFF(); //2017/07/05
+	ca->update_distanceToLeader(); //2017/07/31
+	//ca->update_agent_psychology(); //2017/10/19
+	ca->update_leader_influence(); //2017/09/16
+	//ca->update_strength_agent(); //2017/10/22
+	ca->update_moveable_obstacle(); //2017/10/24
+	//ca->updateDensityAroundObstacle(); //2017/11/16
+	//ca->find_obstacleMustMove(); //2017/10/23
+	//ca->blocked_obstacle_findVolunteer(); //2017/10/23
+	ca->update_blocked_obstacle_position();
+	ca->update_volunteer_position(); //2017/09/22
+	//ca->update_blocked_obstacle_position(); //2017/09/22
+	ca->update_agent_position(); //2017/07/05
+	ca->updateVisibleAgent(); //2017/11/06
+	ca->update_agent_psychology(); //2017/10/19
+	ca->reset_agent_parameters();
+	ca->update_dynamicFF(); //2017/07/05
+	//ca->update_volunteer_towardToObstacle_action(); //2017/09/22
+	//ca->update_blocked_obstacle_position(); //2017/09/22
+	//ca->update_agent_closeToObstalce(); //2017/10/11
+	ca->updateInformationBetweenAgents();
+	ca->printDebugInformation();
 }

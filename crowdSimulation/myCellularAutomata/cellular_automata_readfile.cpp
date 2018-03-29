@@ -64,6 +64,10 @@ void CS_CELLULAR_AUTOMATA::read_data(){
 		{
 			file >> model->kw;
 		}
+		if (dataType == "KE")
+		{
+			file >> model->ke;
+		}
 		if (dataType == "KSS")
 		{
 			file >> model->ks_member;
@@ -412,11 +416,10 @@ void CS_CELLULAR_AUTOMATA::outputInformation(){
 	outputFile.close();
 }
 
-
 void CS_CELLULAR_AUTOMATA::outputAnxietyVariation(){
 
 	outputFile.open("crowd_cellularAutomata/cellular_anxiety.txt");
-	for (int i = 0; i < 10; i++)
+	/*for (int i = 0; i < 10; i++)
 	{
 		int id = leader_pool[i];
 		outputFile << "AGENT " << id;
@@ -443,8 +446,13 @@ void CS_CELLULAR_AUTOMATA::outputAnxietyVariation(){
 		count++;
 		if (count == 5)
 			break;
+	}*/
+	//outputFile << "DENSITY: " << guiParameter.leader_proportion << endl;
+	for (unsigned int i = 0; i < mAvergaeAnxiety.size(); i++)
+	{
+		outputFile << mAvergaeAnxiety[i] << endl;
 	}
-	outputFile << "===========================================================" << endl;
+	//outputFile << "===========================================================" << endl;
 	outputFile.close();
 }
 
@@ -1022,6 +1030,16 @@ void CS_CELLULAR_AUTOMATA::outputObstacleLocatedExperiment(){
 	model->mTimes = 0;
 }
 
+void CS_CELLULAR_AUTOMATA::outputLeaderDistributionExperiment(){
+
+
+}
+
+void CS_CELLULAR_AUTOMATA::outputLeaderProportionExperiment(){
+
+	
+}
+
 void CS_CELLULAR_AUTOMATA::outputTimeInfluenceStrength(){
 
 	outputFile.open("crowd_cellularAutomata/cellular_exponential_timeInfluence.txt", std::ios_base::app);
@@ -1043,7 +1061,7 @@ void CS_CELLULAR_AUTOMATA::set_obstacle(){
 	file.open("crowd_cellularAutomata/cellular_scene.txt");
 
 	if (file.fail()){
-		cout << "CROWD_SIMULATION::cellular_obstacle. Cannot open data file." << endl;
+		cout << "CROWD_SIMULATION::cellular_scene. Cannot open data file." << endl;
 		return;
 	}
 
@@ -1127,7 +1145,14 @@ void CS_CELLULAR_AUTOMATA::set_obstacle(){
 			//o.mWillThreshold = 0;
 			obstacles.push_back(o);
 		}
+		if (s == "MOVE_DIR")
+		{
+			PAIR_INT dir;
+			file >> dir.first >> dir.second;
+			mObstacleMoveDestinationDir.push_back(dir);
+		}
 	}
+	//cout << obstacles.size() << endl;
 	file.close();
 	mRemovalObstacleDestinationAFF.resize(obstacles.size());
 	for (unsigned int i = 0; i < obstacles.size(); i++)
@@ -1273,6 +1298,7 @@ void CS_CELLULAR_AUTOMATA::set_wall(){
 			cell[w.first][w.second].cell_type = 3;
 		}
 	}
+	file.close();
 }
 
 void CS_CELLULAR_AUTOMATA::load_simulation(){
